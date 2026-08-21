@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expert Panel — GreenNest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .panel-shell{ background:var(--forest-deep); min-height:100vh; }
+  .expert-topbar{ background:var(--forest); border-bottom:1px solid var(--line-light); }
+  .expert-topbar .wrap{ display:flex; align-items:center; justify-content:space-between; height:66px; }
+  .expert-topbar .brand{ color:#fff; }
+  .expert-topbar .who{ display:flex; align-items:center; gap:10px; }
+  .expert-topbar select{ background:rgba(255,255,255,.08); border:1px solid var(--line-light); color:#fff; border-radius:10px; padding:8px 12px; font-size:13px; }
+  .back-link{ font-size:12.5px; color:var(--sage); }
+
+  .kpi-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:30px; }
+  .kpi{ background:rgba(255,255,255,.05); border:1px solid var(--line-light); border-radius:14px; padding:18px 20px; }
+  .kpi .n{ font-family:'Fraunces',serif; font-size:26px; font-weight:700; color:#fff; }
+  .kpi .l{ font-size:12px; color:var(--sage); margin-top:4px; }
+
+  .panel-tabs{ display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+  .panel-tab{ border:1px solid var(--line-light); background:transparent; color:var(--sage); border-radius:100px; padding:9px 18px; font-size:13px; }
+  .panel-tab.active{ background:var(--gold); color:var(--forest-deep); border-color:var(--gold); font-weight:600; }
+
+  .req-card{ background:rgba(255,255,255,.05); border:1px solid var(--line-light); border-radius:14px; padding:20px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; color:#fff; }
+  .req-info .title{ font-weight:600; font-size:15px; }
+  .req-info .meta{ font-size:12.5px; color:var(--sage); margin-top:4px; }
+  .req-info .note{ font-size:12.5px; color:rgba(245,241,230,.6); margin-top:6px; font-style:italic; }
+  .req-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .status-tag{ font-family:'Space Mono',monospace; font-size:10.5px; padding:5px 12px; border-radius:100px; text-transform:uppercase; letter-spacing:.04em; }
+  .status-tag.pending{ background:rgba(217,164,72,.18); color:var(--gold); }
+  .status-tag.accepted{ background:rgba(63,125,78,.2); color:#7FD196; }
+  .status-tag.rejected{ background:rgba(181,72,47,.2); color:#E19B87; }
+  .status-tag.completed{ background:rgba(255,255,255,.1); color:var(--sage); }
+
+  .schedule-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+  .day-col{ background:rgba(255,255,255,.05); border:1px solid var(--line-light); border-radius:12px; padding:12px 10px; min-height:120px; color:#fff; }
+  .day-col .dh{ font-family:'Space Mono',monospace; font-size:10.5px; color:var(--sage); text-transform:uppercase; margin-bottom:10px; }
+  .day-col .slot{ background:rgba(217,164,72,.15); border-radius:8px; padding:6px 8px; font-size:11px; color:var(--gold); margin-bottom:6px; }
+  .day-col .empty{ font-size:11px; color:rgba(245,241,230,.3); }
+
+  @media (max-width:820px){ .schedule-grid{ grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); } }
+</style>
+</head>
+<body data-page="expert-panel">
+<div class="panel-shell">
+
+<header class="expert-topbar" style="position:static;">
+  <nav class="wrap">
+    <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#D9A448"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#16302A"/></svg>GreenNest <span style="font-weight:400; opacity:.6; font-size:13px;">/ Expert Panel</span></a>
+    <div class="who">
+      <select id="expert-selector"></select>
+      <a href="index.html" class="back-link">← Exit to customer site</a>
+    </div>
+  </nav>
+</header>
+
+<section style="padding:44px 0;">
+  <div class="wrap">
+    <div class="eyebrow on-dark">Expert Module</div>
+    <h1 style="color:#fff; font-size:clamp(26px,3.6vw,36px);" id="expert-heading">Booking requests</h1>
+    <p style="color:var(--sage); margin-top:10px; font-size:14.5px; max-width:560px;">View incoming booking requests, accept or reject appointments, and see your week at a glance — as described in the proposal's Expert module.</p>
+
+    <div class="kpi-row" style="margin-top:32px;">
+      <div class="kpi"><div class="n" id="kpi-pending">0</div><div class="l">Pending requests</div></div>
+      <div class="kpi"><div class="n" id="kpi-accepted">0</div><div class="l">Accepted appointments</div></div>
+      <div class="kpi"><div class="n" id="kpi-completed">0</div><div class="l">Completed this month</div></div>
+      <div class="kpi"><div class="n" id="kpi-rating">—</div><div class="l">Average rating</div></div>
+    </div>
+
+    <div class="panel-tabs">
+      <button class="panel-tab active" data-tab="requests" onclick="setPanelTab('requests')">Booking Requests</button>
+      <button class="panel-tab" data-tab="schedule" onclick="setPanelTab('schedule')">My Schedule</button>
+    </div>
+
+    <div id="tab-requests">
+      <div id="requests-list"></div>
+    </div>
+
+    <div id="tab-schedule" style="display:none;">
+      <div class="schedule-grid" id="schedule-grid"></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script>
+  const sel = document.getElementById("expert-selector");
+  sel.innerHTML = EXPERTS.map(e=>`<option value="${e.id}">${e.name} — ${e.specialty}</option>`).join("");
+  let currentExpertId = EXPERTS[0].id;
+  sel.addEventListener("change", ()=>{ currentExpertId = Number(sel.value); renderAll(); });
+
+  function myBookings(){
+    // In this demo, all customer bookings are visible to any expert whose
+    // specialty was requested — matching how a real booking inbox would work.
+    const expert = EXPERTS.find(e=>e.id===currentExpertId);
+    return getBookings().filter(b => b.expertId === currentExpertId || b.specialty === expert.specialty);
+  }
+
+  function renderKPIs(){
+    const bookings = myBookings();
+    const expert = EXPERTS.find(e=>e.id===currentExpertId);
+    document.getElementById("expert-heading").textContent = `${expert.name.split(" ")[0]}'s booking requests`;
+    document.getElementById("kpi-pending").textContent = bookings.filter(b=>b.status==="Pending confirmation").length;
+    document.getElementById("kpi-accepted").textContent = bookings.filter(b=>b.status==="Accepted").length;
+    document.getElementById("kpi-completed").textContent = bookings.filter(b=>b.status==="Completed").length;
+    document.getElementById("kpi-rating").textContent = expert.rating.toFixed(1);
+  }
+
+  function statusClass(status){
+    if(status==="Pending confirmation") return "pending";
+    if(status==="Accepted") return "accepted";
+    if(status==="Rejected") return "rejected";
+    return "completed";
+  }
+
+  function renderRequests(){
+    const bookings = myBookings();
+    const box = document.getElementById("requests-list");
+    if(bookings.length===0){
+      box.innerHTML = `<div class="empty-state" style="color:var(--sage);">📭<br>No booking requests yet.<br>Book this specialty from the customer Experts page to see it appear here.</div>`;
+      return;
+    }
+    box.innerHTML = bookings.map(b=>`
+      <div class="req-card">
+        <div class="req-info">
+          <div class="title">${b.date}</div>
+          <div class="meta">Requested for: ${b.specialty}${b.note ? "" : ""}</div>
+          ${b.note ? `<div class="note">"${b.note}"</div>` : ""}
+        </div>
+        <div class="req-actions">
+          <span class="status-tag ${statusClass(b.status)}">${b.status}</span>
+          ${b.status==="Pending confirmation" ? `
+            <button class="btn btn-gold btn-sm" onclick="respond('${b.id}','Accepted')">Accept</button>
+            <button class="btn btn-ghost-dark btn-sm" onclick="respond('${b.id}','Rejected')">Reject</button>
+          ` : ""}
+          ${b.status==="Accepted" ? `<button class="btn btn-ghost-dark btn-sm" onclick="respond('${b.id}','Completed')">Mark completed</button>` : ""}
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function respond(bookingId, status){
+    updateBookingStatus(bookingId, status);
+    renderAll();
+    toast(`Booking marked as ${status}`);
+  }
+
+  function renderSchedule(){
+    const bookings = myBookings().filter(b=>b.status==="Accepted");
+    const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+    document.getElementById("schedule-grid").innerHTML = days.map((d,i)=>{
+      const dayBookings = bookings.filter((b,idx)=> idx % 7 === i); // simple demo distribution
+      return `<div class="day-col"><div class="dh">${d}</div>${
+        dayBookings.length ? dayBookings.map(b=>`<div class="slot">${b.date.split('·')[1]?.trim() || 'Booked'}</div>`).join("") : `<div class="empty">Free</div>`
+      }</div>`;
+    }).join("");
+  }
+
+  function setPanelTab(tab){
+    document.querySelectorAll(".panel-tab").forEach(t=>t.classList.toggle("active", t.dataset.tab===tab));
+    document.getElementById("tab-requests").style.display = tab==="requests" ? "block" : "none";
+    document.getElementById("tab-schedule").style.display = tab==="schedule" ? "block" : "none";
+  }
+
+  function renderAll(){ renderKPIs(); renderRequests(); renderSchedule(); }
+  renderAll();
+</script>
+</body>
+</html>

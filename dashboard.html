@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — GreenNest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .dash-grid{ display:grid; grid-template-columns:2fr 1fr; gap:24px; align-items:start; }
+  .panel{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px; margin-bottom:20px; }
+  .panel h3{ font-size:18px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; }
+  .panel h3 .btn-sm{ font-size:12px; padding:7px 14px; }
+
+  .weather-card{ background:var(--forest); color:#fff; border-radius:16px; padding:24px; margin-bottom:20px; }
+  .weather-card .loc{ font-family:'Space Mono',monospace; font-size:11.5px; color:var(--sage); text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
+  .weather-main{ display:flex; align-items:center; gap:16px; margin:10px 0 16px; }
+  .weather-main .temp{ font-family:'Fraunces',serif; font-size:44px; font-weight:700; }
+  .weather-main .ic{ font-size:44px; }
+  .weather-desc{ font-size:13px; color:var(--sage); margin-bottom:16px; }
+  .alert-list{ display:flex; flex-direction:column; gap:8px; }
+  .alert-item{ background:rgba(255,255,255,0.08); border-radius:10px; padding:10px 14px; font-size:13px; display:flex; gap:8px; align-items:flex-start; }
+  .weather-status{ font-size:12px; color:var(--sage); font-style:italic; }
+
+  .plant-row{ display:flex; gap:14px; align-items:center; padding:14px 0; border-bottom:1px solid var(--line); }
+  .plant-row:last-child{ border-bottom:none; }
+  .plant-thumb{ width:48px; height:48px; border-radius:12px; background:#EDE9DA; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .plant-info{ flex:1; }
+  .plant-info .name{ font-weight:600; font-size:14.5px; }
+  .plant-info .meta{ font-size:12px; color:rgba(22,48,42,.55); }
+  .plant-actions{ display:flex; gap:8px; }
+  .plant-actions button{ background:none; border:1px solid var(--line); border-radius:8px; padding:6px 10px; font-size:12px; }
+  .plant-actions button:hover{ border-color:var(--moss); }
+  .journal-entries{ margin-top:8px; padding-left:14px; border-left:2px solid var(--line); display:none; }
+  .journal-entries.open{ display:block; }
+  .journal-entry{ font-size:12.5px; padding:6px 0; color:rgba(22,48,42,.65); }
+  .journal-entry .date{ font-family:'Space Mono',monospace; font-size:10px; color:var(--moss); display:block; }
+
+  /* growth timeline — a simple dot-and-line visual of care-log activity */
+  .timeline{ display:flex; align-items:center; gap:0; margin:10px 0 4px; overflow-x:auto; padding-bottom:4px; }
+  .timeline .tl-dot{ width:9px; height:9px; border-radius:50%; background:var(--moss); flex-shrink:0; position:relative; }
+  .timeline .tl-dot::after{ content:attr(data-d); position:absolute; top:14px; left:50%; transform:translateX(-50%); font-family:'Space Mono',monospace; font-size:9px; color:rgba(22,48,42,.45); white-space:nowrap; }
+  .timeline .tl-line{ height:2px; background:var(--line); flex:1; min-width:20px; }
+  .timeline-wrap{ margin:6px 0 22px; }
+
+  .empty-mini{ font-size:13px; color:rgba(22,48,42,.5); text-align:center; padding:24px 0; }
+  .summary-row{ display:flex; justify-content:space-between; font-size:13.5px; padding:9px 0; border-bottom:1px dashed var(--line); }
+  .summary-row:last-child{ border-bottom:none; }
+
+  @media (max-width:900px){ .dash-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body data-page="dashboard">
+
+<header>
+  <nav class="wrap">
+    <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#4E7A56"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#F5F1E6"/></svg>GreenNest</a>
+    <div class="navlinks" id="navlinks">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop</a>
+      <a href="quiz.html">Plant Quiz</a>
+      <a href="companion.html">Companion Planner</a>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="experts.html">Experts</a>
+    </div>
+    <div class="nav-icons">
+      <button class="icon-btn" onclick="location.href='dashboard.html'" title="Wishlist / Dashboard">♡<span class="badge" id="wishlist-badge" style="display:none;">0</span></button>
+      <button class="icon-btn" onclick="openDrawer('cart-drawer')" title="Cart">🛒<span class="badge" id="cart-badge" style="display:none;">0</span></button>
+      <button class="hamburger" onclick="toggleNav()">☰</button>
+    </div>
+  </nav>
+</header>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="eyebrow on-dark">Personalized Dashboard</div>
+    <h1>Your garden, at a glance</h1>
+    <p>Live weather-based reminders, your plant growth journal, orders and wishlist — all in one place.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap dash-grid">
+    <div>
+      <div class="panel">
+        <h3>My Plants <button class="btn btn-primary btn-sm" onclick="openModal('add-plant-modal')">+ Add plant</button></h3>
+        <div id="plants-list"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Order History</h3>
+        <div id="orders-list"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="weather-card" id="weather-card">
+        <div class="loc" id="weather-loc">Locating…</div>
+        <div class="weather-status" id="weather-status">Fetching live weather data…</div>
+      </div>
+
+      <div class="panel">
+        <h3>Wishlist</h3>
+        <div id="wishlist-list"></div>
+      </div>
+
+      <div class="panel">
+        <h3>My Bookings</h3>
+        <div id="bookings-list"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span><b>GreenNest</b> — Dashboard</span>
+    <span>Project Proposal · Dept. of CSIT, Tribhuvan University</span>
+  </div>
+</footer>
+
+<!-- Add plant modal -->
+<div class="modal-overlay" id="add-plant-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('add-plant-modal')">✕</button>
+    <h3>Add a plant</h3>
+    <p style="font-size:13px; color:rgba(22,48,42,.6);">Track it in your dashboard and growth journal.</p>
+    <form id="add-plant-form">
+      <div class="field"><label>Plant name</label><input type="text" id="plant-name" required placeholder="e.g. Basil"></div>
+      <div class="field"><label>Environment</label>
+        <select id="plant-env">
+          <option>Indoor</option><option>Outdoor</option><option>Rooftop</option><option>Balcony</option><option>Landscaping</option>
+        </select>
+      </div>
+      <div class="field"><label>Notes (optional)</label><textarea id="plant-notes" placeholder="Where it's placed, anything to remember…"></textarea></div>
+      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:20px;">Add plant</button>
+    </form>
+  </div>
+</div>
+
+<!-- Journal note modal -->
+<div class="modal-overlay" id="journal-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('journal-modal')">✕</button>
+    <h3>Add a care note</h3>
+    <form id="journal-form">
+      <input type="hidden" id="journal-plant-id">
+      <div class="field"><label>Note</label><textarea id="journal-note" required placeholder="e.g. Watered, new leaf sprouting…"></textarea></div>
+      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:20px;">Save note</button>
+    </form>
+  </div>
+</div>
+
+<div class="drawer-overlay" id="cart-drawer-overlay" onclick="closeDrawer('cart-drawer')"></div>
+<div class="drawer" id="cart-drawer">
+  <div class="drawer-head"><h3>Your Cart</h3><button class="modal-close" style="position:static;" onclick="closeDrawer('cart-drawer')">✕</button></div>
+  <div class="drawer-body" id="cart-drawer-body"></div>
+  <div class="drawer-foot">
+    <div style="display:flex; justify-content:space-between; font-weight:600; margin-bottom:14px;">
+      <span>Total</span><span id="cart-drawer-total">NPR 0</span>
+    </div>
+    <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="checkoutNow()">Checkout</button>
+  </div>
+</div>
+
+<div id="toast-holder"></div>
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script>
+  /* ---------- Weather-based reminders (live, via Open-Meteo — free, no API key) ---------- */
+  const FALLBACK_COORDS = { lat:27.7172, lon:85.3240, name:"Kathmandu, Nepal" };
+
+  function weatherCodeInfo(code){
+    if(code===0) return { ic:"☀️", label:"Clear sky" };
+    if([1,2].includes(code)) return { ic:"🌤️", label:"Mostly clear" };
+    if(code===3) return { ic:"☁️", label:"Overcast" };
+    if([45,48].includes(code)) return { ic:"🌫️", label:"Fog" };
+    if([51,53,55,56,57].includes(code)) return { ic:"🌦️", label:"Drizzle" };
+    if([61,63,65,66,67,80,81,82].includes(code)) return { ic:"🌧️", label:"Rain" };
+    if([71,73,75,77,85,86].includes(code)) return { ic:"🌨️", label:"Snow" };
+    if([95,96,99].includes(code)) return { ic:"⛈️", label:"Thunderstorm" };
+    return { ic:"🌡️", label:"Weather" };
+  }
+
+  function buildAlerts(temp, rainProb, code){
+    const alerts = [];
+    if(rainProb >= 50){ alerts.push("🌧️ Rain likely — skip watering outdoor plants today."); }
+    else { alerts.push("💧 No rain expected — outdoor plants may need watering."); }
+    if(temp >= 32){ alerts.push("☀️ Heat alert — check soil moisture and consider shade for sensitive plants."); }
+    if(temp <= 8){ alerts.push("❄️ Cold snap — bring frost-sensitive plants indoors overnight."); }
+    if([61,63,65,80,81,82,95,96,99].includes(code)){ alerts.push("⛈️ Active precipitation — hold off on fertilizing until it clears."); }
+    alerts.push("✂️ Routine check: inspect for pruning and repotting needs this week.");
+    return alerts;
+  }
+
+  async function loadWeather(lat, lon, locName){
+    try{
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=precipitation_probability_max&timezone=auto`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const temp = Math.round(data.current.temperature_2m);
+      const code = data.current.weather_code;
+      const rainProb = data.daily.precipitation_probability_max[0];
+      const info = weatherCodeInfo(code);
+
+      document.getElementById("weather-loc").textContent = locName;
+      document.getElementById("weather-card").innerHTML = `
+        <div class="loc">${locName}</div>
+        <div class="weather-main"><span class="ic">${info.ic}</span><span class="temp">${temp}°C</span></div>
+        <div class="weather-desc">${info.label} · ${rainProb}% chance of rain today</div>
+        <div class="alert-list">${buildAlerts(temp, rainProb, code).map(a=>`<div class="alert-item">${a}</div>`).join("")}</div>
+      `;
+    }catch(err){
+      document.getElementById("weather-card").innerHTML = `
+        <div class="loc">Weather unavailable</div>
+        <div class="weather-status">Couldn't reach the live weather service. Check your internet connection and reload.</div>
+      `;
+    }
+  }
+
+  function initWeather(){
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        pos => loadWeather(pos.coords.latitude, pos.coords.longitude, "Your location"),
+        () => loadWeather(FALLBACK_COORDS.lat, FALLBACK_COORDS.lon, FALLBACK_COORDS.name),
+        { timeout: 5000 }
+      );
+    }else{
+      loadWeather(FALLBACK_COORDS.lat, FALLBACK_COORDS.lon, FALLBACK_COORDS.name);
+    }
+  }
+  initWeather();
+
+  /* ---------- Plants + journal ---------- */
+  function renderPlants(){
+    const plants = getPlants();
+    const box = document.getElementById("plants-list");
+    if(plants.length===0){
+      box.innerHTML = `<div class="empty-mini">No plants yet. Add one to start a growth journal.</div>`;
+      return;
+    }
+    box.innerHTML = plants.map(p=>{
+      const entries = getJournal(p.id);
+      const timelineDates = [p.addedOn, ...entries.map(e=>e.date)].sort();
+    const timelineHtml = timelineDates.length > 1 ? `
+      <div class="timeline-wrap">
+        <div class="timeline">
+          ${timelineDates.map((d,i)=>`
+            <div class="tl-dot" data-d="${new Date(d).toLocaleDateString(undefined,{month:'short',day:'numeric'})}"></div>
+            ${i < timelineDates.length-1 ? '<div class="tl-line"></div>' : ''}
+          `).join("")}
+        </div>
+      </div>` : "";
+    return `
+      <div class="plant-row" style="flex-direction:column; align-items:stretch;">
+        <div style="display:flex; gap:14px; align-items:center;">
+          <div class="plant-thumb media-thumb" style="width:48px;height:48px;"><span class="emoji">🌿</span></div>
+          <div class="plant-info">
+            <div class="name">${p.name}</div>
+            <div class="meta">${p.env} · added ${new Date(p.addedOn).toLocaleDateString()}</div>
+          </div>
+          <div class="plant-actions">
+            <button onclick="openJournalModal('${p.id}')">+ Note</button>
+            <button onclick="toggleJournal('${p.id}')">Journal (${entries.length})</button>
+            <button onclick="removePlant('${p.id}'); renderPlants();">Remove</button>
+          </div>
+        </div>
+        ${timelineHtml}
+        <div class="journal-entries" id="journal-${p.id}">
+          ${p.notes ? `<div class="journal-entry" style="font-style:italic;">${p.notes}</div>` : ""}
+          ${entries.map(e=>`<div class="journal-entry"><span class="date">${new Date(e.date).toLocaleString()}</span>${e.note}</div>`).join("") || `<div class="journal-entry">No care notes yet.</div>`}
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  function toggleJournal(id){
+    document.getElementById("journal-"+id).classList.toggle("open");
+  }
+  function openJournalModal(id){
+    document.getElementById("journal-plant-id").value = id;
+    openModal("journal-modal");
+  }
+
+  document.getElementById("add-plant-form").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    addPlant({
+      name: document.getElementById("plant-name").value,
+      env: document.getElementById("plant-env").value,
+      notes: document.getElementById("plant-notes").value,
+    });
+    e.target.reset();
+    closeModal("add-plant-modal");
+    renderPlants();
+    toast("Plant added to your dashboard");
+  });
+
+  document.getElementById("journal-form").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const id = document.getElementById("journal-plant-id").value;
+    addJournalEntry(id, document.getElementById("journal-note").value);
+    e.target.reset();
+    closeModal("journal-modal");
+    renderPlants();
+    document.getElementById("journal-"+id).classList.add("open");
+    toast("Care note saved");
+  });
+
+  /* ---------- Wishlist summary ---------- */
+  function renderWishlist(){
+    const ids = getWishlist();
+    const box = document.getElementById("wishlist-list");
+    if(ids.length===0){ box.innerHTML = `<div class="empty-mini">No saved products yet.</div>`; return; }
+    box.innerHTML = ids.map(id=>{
+      const p = PRODUCTS.find(x=>x.id===id);
+      if(!p) return "";
+      return `<div class="summary-row"><span>${p.img} ${p.name}</span><span>NPR ${p.price}</span></div>`;
+    }).join("");
+  }
+
+  /* ---------- Orders ---------- */
+  function renderOrders(){
+    const orders = readLS(LS.orders, []);
+    const box = document.getElementById("orders-list");
+    if(orders.length===0){ box.innerHTML = `<div class="empty-mini">No orders yet — place one from the shop.</div>`; return; }
+    box.innerHTML = orders.map(o=>`
+      <div class="summary-row">
+        <span>${o.id} · ${o.items.reduce((s,i)=>s+i.qty,0)} item(s) · ${new Date(o.date).toLocaleDateString()}</span>
+        <span>NPR ${o.total.toLocaleString()}</span>
+      </div>`).join("");
+  }
+
+  /* ---------- Bookings ---------- */
+  function renderBookings(){
+    const bookings = getBookings();
+    const box = document.getElementById("bookings-list");
+    if(bookings.length===0){ box.innerHTML = `<div class="empty-mini">No expert bookings yet.</div>`; return; }
+    box.innerHTML = bookings.map(b=>`
+      <div class="summary-row">
+        <span>${b.expertName} · ${b.date}</span>
+        <span>${b.status}</span>
+      </div>`).join("");
+  }
+
+  renderPlants();
+  renderWishlist();
+  renderOrders();
+  renderBookings();
+</script>
+</body>
+</html>

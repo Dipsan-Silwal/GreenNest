@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Companion &amp; Seasonal Planner — GreenNest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .planner-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(320px,1fr)); gap:24px; align-items:start; }
+  .planner-panel h3{ font-size:19px; margin-bottom:6px; }
+  .planner-panel .sub{ font-size:13px; color:rgba(22,48,42,.6); margin-bottom:20px; }
+  .plant-select-row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+  .plant-select-row select{ flex:1; min-width:160px; }
+  .chip-select{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .chip-select button{ border:1.5px solid var(--line); background:#fff; border-radius:100px; padding:8px 15px; font-size:13px; }
+  .chip-select button.selected{ border-color:var(--gold); background:#FBF3E3; }
+  .result-box{ border-radius:14px; padding:20px; margin-top:6px; }
+  .result-box.good{ background:#EAF3EA; border:1px solid rgba(63,125,78,.25); }
+  .result-box.bad{ background:#FBEDE8; border:1px solid rgba(181,72,47,.25); }
+  .result-box.neutral{ background:var(--clay); }
+  .result-box .rb-title{ font-weight:700; font-size:14px; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+  .result-box.good .rb-title{ color:var(--success); }
+  .result-box.bad .rb-title{ color:var(--danger); }
+  .result-box p{ font-size:13.5px; color:rgba(22,48,42,.75); }
+
+  .season-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+  .season-tab{ border:1.5px solid var(--line); background:#fff; border-radius:100px; padding:9px 18px; font-size:13px; font-weight:500; }
+  .season-tab.active{ background:var(--forest); color:#fff; border-color:var(--forest); }
+  .season-plant-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; }
+  .sp-card{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; text-align:center; }
+  .sp-card .media-thumb{ height:70px; margin-bottom:10px; }
+  .sp-card .nm{ font-size:13.5px; font-weight:600; }
+</style>
+</head>
+<body data-page="companion">
+
+<header>
+  <nav class="wrap">
+    <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#4E7A56"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#F5F1E6"/></svg>GreenNest</a>
+    <div class="navlinks" id="navlinks">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop</a>
+      <a href="quiz.html">Plant Quiz</a>
+      <a href="companion.html" class="active">Companion Planner</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="experts.html">Experts</a>
+    </div>
+    <div class="nav-icons">
+      <button class="icon-btn" onclick="location.href='dashboard.html'" title="Wishlist / Dashboard">♡<span class="badge" id="wishlist-badge" style="display:none;">0</span></button>
+      <button class="icon-btn" onclick="openDrawer('cart-drawer')" title="Cart">🛒<span class="badge" id="cart-badge" style="display:none;">0</span></button>
+      <button class="hamburger" onclick="toggleNav()">☰</button>
+    </div>
+  </nav>
+</header>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="eyebrow on-dark">Companion &amp; Seasonal Recommendations</div>
+    <h1>Plan what grows well together</h1>
+    <p>Pick two plants to check compatibility, or browse what's in season right now.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap planner-grid">
+    <div class="planner-panel card">
+      <h3>🌿 Companion Checker</h3>
+      <div class="sub">Choose two plants to see if they help or hinder each other.</div>
+      <div class="plant-select-row">
+        <select id="plant-a"></select>
+        <select id="plant-b"></select>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="checkCompanion()">Check compatibility</button>
+      <div id="companion-result"></div>
+    </div>
+
+    <div class="planner-panel card">
+      <h3>☀️ Seasonal Picks</h3>
+      <div class="sub">Suggested plants based on the current season in Nepal.</div>
+      <div class="season-tabs" id="season-tabs"></div>
+      <div class="season-plant-grid" id="season-grid"></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span><b>GreenNest</b> — Companion &amp; Seasonal Planner</span>
+    <span>Project Proposal · Dept. of CSIT, Tribhuvan University</span>
+  </div>
+</footer>
+
+<div class="drawer-overlay" id="cart-drawer-overlay" onclick="closeDrawer('cart-drawer')"></div>
+<div class="drawer" id="cart-drawer">
+  <div class="drawer-head"><h3>Your Cart</h3><button class="modal-close" style="position:static;" onclick="closeDrawer('cart-drawer')">✕</button></div>
+  <div class="drawer-body" id="cart-drawer-body"></div>
+  <div class="drawer-foot">
+    <div style="display:flex; justify-content:space-between; font-weight:600; margin-bottom:14px;">
+      <span>Total</span><span id="cart-drawer-total">NPR 0</span>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="checkoutNow()">Checkout</button>
+  </div>
+</div>
+
+<div id="toast-holder"></div>
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script>
+  const plantNames = PRODUCTS.filter(p=>p.category==="Plants").map(p=>p.name);
+  const selA = document.getElementById("plant-a");
+  const selB = document.getElementById("plant-b");
+  [selA, selB].forEach((sel,i)=>{
+    sel.innerHTML = plantNames.map(n=>`<option>${n}</option>`).join("");
+    sel.selectedIndex = i===0 ? 0 : 1;
+  });
+
+  function checkCompanion(){
+    const a = selA.value, b = selB.value;
+    const box = document.getElementById("companion-result");
+    if(a===b){
+      box.innerHTML = `<div class="result-box neutral"><div class="rb-title">Same plant selected</div><p>Choose two different plants to compare.</p></div>`;
+      return;
+    }
+    const goodMatch = COMPANIONS.find(c => c.set.includes(a) && c.set.includes(b));
+    const badMatch = INCOMPATIBLE.find(c => c.set.includes(a) && c.set.includes(b));
+    if(goodMatch){
+      box.innerHTML = `<div class="result-box good"><div class="rb-title">✓ Great pairing</div><p>${goodMatch.note}</p></div>`;
+    }else if(badMatch){
+      box.innerHTML = `<div class="result-box bad"><div class="rb-title">✕ Avoid planting together</div><p>${badMatch.note}</p></div>`;
+    }else{
+      box.innerHTML = `<div class="result-box neutral"><div class="rb-title">No known conflict</div><p>${a} and ${b} aren't a documented companion pair, but there's no known reason to avoid growing them near each other.</p></div>`;
+    }
+  }
+
+  const seasons = Object.keys(SEASON_PLANTS);
+  let activeSeason = seasons[0];
+  function renderSeasonTabs(){
+    document.getElementById("season-tabs").innerHTML = seasons.map(s=>
+      `<button class="season-tab ${s===activeSeason?'active':''}" onclick="setSeason('${s}')">${s}</button>`
+    ).join("");
+  }
+  function setSeason(s){ activeSeason = s; renderSeasonTabs(); renderSeasonGrid(); }
+  function renderSeasonGrid(){
+    const names = SEASON_PLANTS[activeSeason];
+    document.getElementById("season-grid").innerHTML = names.map(n=>{
+      const p = PRODUCTS.find(x=>x.name===n);
+      return `<div class="sp-card"><div class="media-thumb"><span class="emoji">${p?p.img:'🌱'}</span></div><div class="nm">${n}</div></div>`;
+    }).join("");
+  }
+  renderSeasonTabs();
+  renderSeasonGrid();
+  checkCompanion();
+</script>
+</body>
+</html>

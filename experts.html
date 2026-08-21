@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experts — GreenNest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .expert-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:18px; }
+  .e-card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:10px; }
+  .e-top{ display:flex; gap:14px; align-items:center; }
+  .e-avatar{ width:52px; height:52px; border-radius:50%; background:#EDE9DA; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+  .e-name{ font-family:'Fraunces',serif; font-weight:600; font-size:16.5px; }
+  .e-spec{ font-size:12.5px; color:var(--moss); font-weight:600; }
+  .e-rating{ font-size:12.5px; color:rgba(22,48,42,.6); }
+  .e-bio{ font-size:13px; color:rgba(22,48,42,.65); flex:1; }
+  .e-foot{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+  .e-price{ font-weight:700; font-size:14px; }
+  .my-bookings{ margin-top:50px; }
+  .bk-row{ display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--line); font-size:14px; }
+  .bk-row:last-child{ border-bottom:none; }
+  .bk-status{ font-family:'Space Mono',monospace; font-size:11px; background:#EDE9DA; padding:5px 10px; border-radius:100px; }
+  .bk-cancel{ background:none; border:none; color:#B5482F; font-size:12px; margin-left:12px; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#4E7A56"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#F5F1E6"/></svg>GreenNest</a>
+    <div class="navlinks" id="navlinks">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop</a>
+      <a href="quiz.html">Plant Quiz</a>
+      <a href="companion.html">Companion Planner</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="experts.html" class="active">Experts</a>
+    </div>
+    <div class="nav-icons">
+      <button class="icon-btn" onclick="location.href='dashboard.html'" title="Wishlist / Dashboard">♡<span class="badge" id="wishlist-badge" style="display:none;">0</span></button>
+      <button class="icon-btn" onclick="openDrawer('cart-drawer')" title="Cart">🛒<span class="badge" id="cart-badge" style="display:none;">0</span></button>
+      <button class="hamburger" onclick="toggleNav()">☰</button>
+    </div>
+  </nav>
+</header>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="eyebrow on-dark">Expert Gardening Service</div>
+    <h1>Book a verified professional</h1>
+    <p>Rooftop installs, landscaping, consultations, disease inspection, monthly maintenance and home visits.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="expert-grid" id="expert-grid"></div>
+
+    <div class="my-bookings">
+      <div class="section-head" style="margin-bottom:20px;">
+        <div class="eyebrow">Your Bookings</div>
+        <h2 style="font-size:24px;">Booking status</h2>
+      </div>
+      <div class="card" id="my-bookings-box"></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span><b>GreenNest</b> — Expert Services</span>
+    <span>Project Proposal · Dept. of CSIT, Tribhuvan University</span>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="book-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('book-modal')">✕</button>
+    <h3 id="book-title">Book expert</h3>
+    <p style="font-size:13px; color:rgba(22,48,42,.6);" id="book-sub"></p>
+    <form id="book-form">
+      <input type="hidden" id="book-expert-id">
+      <div class="field"><label>Preferred date</label><input type="date" id="book-date" required></div>
+      <div class="field"><label>Preferred time</label>
+        <select id="book-time">
+          <option>Morning (9AM–12PM)</option><option>Afternoon (1PM–4PM)</option><option>Evening (5PM–7PM)</option>
+        </select>
+      </div>
+      <div class="field"><label>What do you need help with?</label><textarea id="book-note" placeholder="e.g. Rooftop container garden setup, ~15 pots"></textarea></div>
+      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:20px;">Confirm booking request</button>
+    </form>
+  </div>
+</div>
+
+<div class="drawer-overlay" id="cart-drawer-overlay" onclick="closeDrawer('cart-drawer')"></div>
+<div class="drawer" id="cart-drawer">
+  <div class="drawer-head"><h3>Your Cart</h3><button class="modal-close" style="position:static;" onclick="closeDrawer('cart-drawer')">✕</button></div>
+  <div class="drawer-body" id="cart-drawer-body"></div>
+  <div class="drawer-foot">
+    <div style="display:flex; justify-content:space-between; font-weight:600; margin-bottom:14px;">
+      <span>Total</span><span id="cart-drawer-total">NPR 0</span>
+    </div>
+    <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="checkoutNow()">Checkout</button>
+  </div>
+</div>
+
+<div id="toast-holder"></div>
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script>
+  function renderExperts(){
+    document.getElementById("expert-grid").innerHTML = EXPERTS.map(e=>`
+      <div class="e-card">
+        <div class="e-top">
+          <div class="e-avatar">${e.avatar}</div>
+          <div>
+            <div class="e-name">${e.name}</div>
+            <div class="e-spec">${e.specialty}</div>
+          </div>
+        </div>
+        <div class="e-rating">★ ${e.rating.toFixed(1)}</div>
+        <div class="e-bio">${e.bio}</div>
+        <div class="e-foot">
+          <span class="e-price">${e.price}</span>
+          <button class="btn btn-primary btn-sm" onclick="openBookModal(${e.id})">Book</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function openBookModal(expertId){
+    const e = EXPERTS.find(x=>x.id===expertId);
+    document.getElementById("book-expert-id").value = expertId;
+    document.getElementById("book-title").textContent = `Book ${e.name}`;
+    document.getElementById("book-sub").textContent = `${e.specialty} · ${e.price}`;
+    openModal("book-modal");
+  }
+
+  document.getElementById("book-form").addEventListener("submit", (ev)=>{
+    ev.preventDefault();
+    const expertId = Number(document.getElementById("book-expert-id").value);
+    const e = EXPERTS.find(x=>x.id===expertId);
+    const date = document.getElementById("book-date").value;
+    const time = document.getElementById("book-time").value;
+    const note = document.getElementById("book-note").value;
+    if(!date){ toast("Please choose a date"); return; }
+    addBooking({ expertId, expertName: e.name, specialty: e.specialty, date: `${date} · ${time}`, note });
+    ev.target.reset();
+    closeModal("book-modal");
+    renderMyBookings();
+    toast(`Booking request sent to ${e.name}`);
+  });
+
+  function renderMyBookings(){
+    const bookings = getBookings();
+    const box = document.getElementById("my-bookings-box");
+    if(bookings.length===0){
+      box.innerHTML = `<div class="empty-state">📅<br>No bookings yet. Choose an expert above to get started.</div>`;
+      return;
+    }
+    box.innerHTML = bookings.map(b=>`
+      <div class="bk-row">
+        <div>
+          <div style="font-weight:600;">${b.expertName} — ${b.specialty}</div>
+          <div style="font-size:12.5px; color:rgba(22,48,42,.55);">${b.date}${b.note ? " · " + b.note : ""}</div>
+        </div>
+        <div>
+          <span class="bk-status">${b.status}</span>
+          <button class="bk-cancel" onclick="cancelBooking('${b.id}'); renderMyBookings();">Cancel</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  renderExperts();
+  renderMyBookings();
+</script>
+</body>
+</html>

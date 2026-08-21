@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — GreenNest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body{ background:var(--clay); }
+  .admin-shell{ display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+  .admin-side{ background:var(--forest); color:#fff; padding:26px 18px; }
+  .admin-side .brand{ color:#fff; margin-bottom:34px; padding:0 8px; }
+  .admin-side .brand svg circle{ fill:#D9A448; }
+  .admin-side .brand svg path{ fill:#16302A; }
+  .side-link{ display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:10px; font-size:13.5px; color:var(--sage); margin-bottom:4px; }
+  .side-link:hover{ background:rgba(255,255,255,.06); color:#fff; }
+  .side-link.active{ background:rgba(217,164,72,.15); color:var(--gold); font-weight:600; }
+  .side-foot{ margin-top:40px; padding:0 8px; font-size:12px; color:rgba(245,241,230,.4); }
+  .side-foot a{ color:var(--sage); }
+
+  .admin-main{ padding:32px clamp(20px,3vw,40px); }
+  .admin-head{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:26px; }
+  .admin-head h1{ font-size:26px; }
+
+  .kpi-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:30px; }
+  .kpi{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px 20px; }
+  .kpi .n{ font-family:'Fraunces',serif; font-size:26px; font-weight:700; color:var(--forest); }
+  .kpi .l{ font-size:12px; color:rgba(22,48,42,.6); margin-top:4px; }
+
+  .admin-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
+  .admin-tab{ border:1px solid var(--line); background:#fff; border-radius:100px; padding:9px 18px; font-size:13px; }
+  .admin-tab.active{ background:var(--forest); color:#fff; border-color:var(--forest); }
+  .admin-view{ display:none; }
+  .admin-view.active{ display:block; }
+
+  .data-table{ width:100%; border-collapse:collapse; background:#fff; border-radius:14px; overflow:hidden; border:1px solid var(--line); }
+  .data-table th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:rgba(22,48,42,.55); padding:12px 16px; background:var(--clay); border-bottom:1px solid var(--line); }
+  .data-table td{ padding:12px 16px; font-size:13.5px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  .data-table tr:last-child td{ border-bottom:none; }
+  .table-wrap{ overflow-x:auto; border-radius:14px; }
+  .stock-low{ color:var(--danger); font-weight:600; }
+  .row-actions{ display:flex; gap:6px; }
+  .row-actions button{ border:1px solid var(--line); background:#fff; border-radius:7px; padding:5px 10px; font-size:11.5px; }
+  .row-actions button.danger{ color:var(--danger); border-color:rgba(181,72,47,.3); }
+  .status-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; }
+  .status-dot.ok{ background:var(--success); }
+  .status-dot.low{ background:var(--danger); }
+
+  .report-card{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:12px; }
+  .report-card .rt{ font-weight:600; font-size:14.5px; }
+  .report-card .rd{ font-size:12.5px; color:rgba(22,48,42,.6); margin-top:3px; }
+
+  @media (max-width:860px){
+    .admin-shell{ grid-template-columns:1fr; }
+    .admin-side{ display:flex; overflow-x:auto; gap:6px; padding:14px; }
+    .admin-side .brand{ display:none; }
+    .side-foot{ display:none; }
+    .side-link{ white-space:nowrap; }
+  }
+</style>
+</head>
+<body data-page="admin">
+
+<div class="admin-shell">
+  <aside class="admin-side">
+    <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none" width="24" height="24"><circle cx="12" cy="12" r="12"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z"/></svg></a>
+    <a class="side-link active" data-view="overview" onclick="setAdminTab('overview')">📊 Overview</a>
+    <a class="side-link" data-view="customers" onclick="setAdminTab('customers')">👥 Customers</a>
+    <a class="side-link" data-view="products" onclick="setAdminTab('products')">🌱 Products</a>
+    <a class="side-link" data-view="experts" onclick="setAdminTab('experts')">🧑‍🌾 Experts</a>
+    <a class="side-link" data-view="appointments" onclick="setAdminTab('appointments')">📅 Appointments</a>
+    <a class="side-link" data-view="orders" onclick="setAdminTab('orders')">🛒 Orders</a>
+    <a class="side-link" data-view="reports" onclick="setAdminTab('reports')">📄 Reports</a>
+    <div class="side-foot">
+      <a href="index.html">← Exit to customer site</a>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-head">
+      <div>
+        <div class="eyebrow">Admin Module</div>
+        <h1>Platform overview</h1>
+      </div>
+      <div style="font-size:12.5px; color:rgba(22,48,42,.55);">Logged in as <b>Admin</b> · GreenNest HQ</div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="n" id="kpi-products">0</div><div class="l">Active products</div></div>
+      <div class="kpi"><div class="n" id="kpi-lowstock">0</div><div class="l">Low stock (&lt;10)</div></div>
+      <div class="kpi"><div class="n" id="kpi-experts">0</div><div class="l">Verified experts</div></div>
+      <div class="kpi"><div class="n" id="kpi-bookings">0</div><div class="l">Total bookings</div></div>
+      <div class="kpi"><div class="n" id="kpi-orders">0</div><div class="l">Orders placed</div></div>
+      <div class="kpi"><div class="n" id="kpi-revenue">NPR 0</div><div class="l">Total revenue</div></div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="admin-view active" id="view-overview">
+      <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Recent activity</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Type</th><th>Detail</th><th>Date</th></tr></thead>
+          <tbody id="activity-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="admin-view" id="view-customers">
+      <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Customer directory</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Customer</th><th>Username</th><th>Email</th><th>Orders</th><th>Status</th></tr></thead>
+          <tbody id="customers-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="admin-view" id="view-products">
+      <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Manage products &amp; categories</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Environment</th><th></th></tr></thead>
+          <tbody id="products-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EXPERTS -->
+    <div class="admin-view" id="view-experts">
+      <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Manage experts</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Expert</th><th>Specialty</th><th>Rating</th><th>Rate</th><th></th></tr></thead>
+          <tbody id="experts-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div class="admin-view" id="view-appointments">
+      <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Manage appointments &amp; reminders</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Booking ID</th><th>Expert</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="appointments-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="admin-view" id="view-orders">
+      <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Manage orders</h2></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Order ID</th><th>Items</th><th>Total</th><th>Date</th></tr></thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="admin-view" id="view-reports">
+      <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Generate reports</h2></div>
+      <div class="report-card">
+        <div><div class="rt">Product Inventory Report</div><div class="rd">All 21 products with category, price and stock levels.</div></div>
+        <button class="btn btn-primary btn-sm" onclick="exportProducts()">Download CSV</button>
+      </div>
+      <div class="report-card">
+        <div><div class="rt">Orders Report</div><div class="rd">Every order placed on this device, with totals.</div></div>
+        <button class="btn btn-primary btn-sm" onclick="exportOrders()">Download CSV</button>
+      </div>
+      <div class="report-card">
+        <div><div class="rt">Bookings Report</div><div class="rd">All expert booking requests and their current status.</div></div>
+        <button class="btn btn-primary btn-sm" onclick="exportBookings()">Download CSV</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-holder"></div>
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script>
+  function setAdminTab(view){
+    document.querySelectorAll(".side-link").forEach(l=>l.classList.toggle("active", l.dataset.view===view));
+    document.querySelectorAll(".admin-view").forEach(v=>v.classList.toggle("active", v.id==="view-"+view));
+  }
+
+  function renderKPIs(){
+    const orders = readLS(LS.orders, []);
+    const bookings = getBookings();
+    const revenue = orders.reduce((s,o)=>s+o.total,0);
+    document.getElementById("kpi-products").textContent = PRODUCTS.length;
+    document.getElementById("kpi-lowstock").textContent = PRODUCTS.filter(p=>p.stock<10).length;
+    document.getElementById("kpi-experts").textContent = EXPERTS.length;
+    document.getElementById("kpi-bookings").textContent = bookings.length;
+    document.getElementById("kpi-orders").textContent = orders.length;
+    document.getElementById("kpi-revenue").textContent = "NPR " + revenue.toLocaleString();
+  }
+
+  function renderActivity(){
+    const orders = readLS(LS.orders, []).map(o=>({type:"Order", detail:`${o.id} · NPR ${o.total.toLocaleString()}`, date:o.date}));
+    const bookings = getBookings().map(b=>({type:"Booking", detail:`${b.expertName} · ${b.status}`, date: b.id ? new Date(parseInt(b.id.replace('BK',''))||Date.now()).toISOString() : new Date().toISOString()}));
+    const all = [...orders, ...bookings].sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,12);
+    const body = document.getElementById("activity-body");
+    body.innerHTML = all.length ? all.map(a=>`<tr><td>${a.type}</td><td>${a.detail}</td><td>${new Date(a.date).toLocaleString()}</td></tr>`).join("")
+      : `<tr><td colspan="3" style="text-align:center; color:rgba(22,48,42,.5); padding:30px;">No activity yet — place an order or booking from the customer site.</td></tr>`;
+  }
+
+  function renderCustomers(){
+    const customers = getCustomerProfiles();
+    const orders = readLS(LS.orders, []);
+    const tbody = document.getElementById("customers-body");
+    tbody.innerHTML = customers.map((customer)=>{
+      const totalOrders = orders.filter((order) => order.customerName === customer.name || order.customerUsername === customer.username).length;
+      return `
+        <tr>
+          <td><div style="display:flex; align-items:center; gap:10px;"><img src="${customer.photo || DEFAULT_CUSTOMER_AVATAR}" style="width:34px; height:34px; border-radius:50%; object-fit:cover; border:1px solid rgba(22,48,42,.08);" alt="${customer.name}" /><span>${customer.name}</span></div></td>
+          <td>${customer.username}</td>
+          <td>${customer.email}</td>
+          <td>${totalOrders}</td>
+          <td><span class="status-dot ok"></span>Active</td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function renderProducts(){
+    document.getElementById("products-body").innerHTML = PRODUCTS.map(p=>`
+      <tr>
+        <td>${p.img} ${p.name}</td>
+        <td>${p.category}</td>
+        <td>NPR ${p.price}</td>
+        <td class="${p.stock<10 ? 'stock-low' : ''}"><span class="status-dot ${p.stock<10?'low':'ok'}"></span>${p.stock}</td>
+        <td>${p.env.join(", ")}</td>
+        <td><div class="row-actions"><button onclick="toast('Edit form would open here')">Edit</button><button class="danger" onclick="toast('Product would be removed here')">Remove</button></div></td>
+      </tr>
+    `).join("");
+  }
+
+  function renderExperts(){
+    document.getElementById("experts-body").innerHTML = EXPERTS.map(e=>`
+      <tr>
+        <td>${e.avatar} ${e.name}</td>
+        <td>${e.specialty}</td>
+        <td>★ ${e.rating.toFixed(1)}</td>
+        <td>${e.price}</td>
+        <td><div class="row-actions"><button onclick="toast('Edit form would open here')">Edit</button><button class="danger" onclick="toast('Expert would be removed here')">Remove</button></div></td>
+      </tr>
+    `).join("");
+  }
+
+  function renderAppointments(){
+    const bookings = getBookings();
+    document.getElementById("appointments-body").innerHTML = bookings.length ? bookings.map(b=>`
+      <tr>
+        <td>${b.id}</td>
+        <td>${b.expertName}</td>
+        <td>${b.date}</td>
+        <td>${b.status}</td>
+      </tr>
+    `).join("") : `<tr><td colspan="4" style="text-align:center; color:rgba(22,48,42,.5); padding:30px;">No appointments yet.</td></tr>`;
+  }
+
+  function renderOrders(){
+    const orders = readLS(LS.orders, []);
+    document.getElementById("orders-body").innerHTML = orders.length ? orders.map(o=>`
+      <tr>
+        <td>${o.id}</td>
+        <td>${o.items.reduce((s,i)=>s+i.qty,0)} item(s)</td>
+        <td>NPR ${o.total.toLocaleString()}</td>
+        <td>${new Date(o.date).toLocaleDateString()}</td>
+      </tr>
+    `).join("") : `<tr><td colspan="4" style="text-align:center; color:rgba(22,48,42,.5); padding:30px;">No orders yet.</td></tr>`;
+  }
+
+  function exportProducts(){
+    const rows = [["Name","Category","Price","Stock","Environments"], ...PRODUCTS.map(p=>[p.name,p.category,p.price,p.stock,p.env.join("/")])];
+    downloadCSV("greennest_products.csv", rows);
+    toast("Product report downloaded");
+  }
+  function exportOrders(){
+    const orders = readLS(LS.orders, []);
+    const rows = [["Order ID","Items","Total","Date"], ...orders.map(o=>[o.id, o.items.reduce((s,i)=>s+i.qty,0), o.total, o.date])];
+    downloadCSV("greennest_orders.csv", rows);
+    toast("Orders report downloaded");
+  }
+  function exportBookings(){
+    const bookings = getBookings();
+    const rows = [["Booking ID","Expert","Specialty","Date","Status"], ...bookings.map(b=>[b.id,b.expertName,b.specialty,b.date,b.status])];
+    downloadCSV("greennest_bookings.csv", rows);
+    toast("Bookings report downloaded");
+  }
+
+  renderKPIs();
+  renderActivity();
+  renderCustomers();
+  renderProducts();
+  renderExperts();
+  renderAppointments();
+  renderOrders();
+</script>
+</body>
+</html>

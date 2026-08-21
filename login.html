@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GreenNest Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(22,48,42,.96), rgba(14,33,28,.95)),
+                  url('https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+      color: #fff;
+      font-family: 'Work Sans', sans-serif;
+    }
+    .login-shell {
+      width: min(430px, calc(100% - 28px));
+      background: rgba(245,241,230,.96);
+      color: var(--forest);
+      border-radius: 26px;
+      padding: 28px 24px 26px;
+      box-shadow: 0 30px 70px rgba(0,0,0,.36);
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(10px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-family: 'Fraunces', serif;
+      font-size: clamp(26px, 3vw, 32px);
+      margin-bottom: 8px;
+      color: var(--forest);
+    }
+    .brand svg { width: 30px; height: 30px; }
+    .subtitle {
+      text-align: center;
+      font-size: 13.5px;
+      color: rgba(22,48,42,.7);
+      margin-bottom: 22px;
+    }
+    .login-form {
+      display: grid;
+      gap: 14px;
+    }
+    .field label {
+      display: block;
+      font-size: 11.5px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      color: rgba(22,48,42,.72);
+    }
+    .field input, .field select {
+      width: 100%;
+      border: 1px solid rgba(22,48,42,.12);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      background: rgba(255,255,255,.96);
+      color: var(--ink);
+      box-shadow: inset 0 1px 2px rgba(22,48,42,.04);
+    }
+    .field input:focus, .field select:focus {
+      outline: 2px solid rgba(78,122,86,.18);
+      border-color: var(--moss);
+    }
+    .login-btn {
+      width: 100%;
+      margin-top: 8px;
+      border-radius: 14px;
+      padding: 14px 18px;
+      background: linear-gradient(180deg, var(--forest), #214837);
+      box-shadow: 0 12px 24px -16px rgba(22,48,42,.8);
+    }
+    .demo-box {
+      margin-top: 20px;
+      border: 1px dashed rgba(22,48,42,.2);
+      border-radius: 14px;
+      background: rgba(78,122,86,.04);
+      padding: 12px 14px;
+      font-size: 12px;
+      color: rgba(22,48,42,.72);
+      line-height: 1.8;
+    }
+    .demo-box strong { color: var(--forest); }
+    .error {
+      display: none;
+      color: var(--danger);
+      font-size: 12.5px;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+    .error.show { display: block; }
+  </style>
+</head>
+<body data-page="login">
+  <div class="login-shell">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#4E7A56"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#F5F1E6"/></svg>
+      GreenNest
+    </div>
+    <div class="subtitle">Sign in to continue to your GreenNest workspace</div>
+
+    <form id="login-form" class="login-form">
+      <div class="field">
+        <label for="role">Login as</label>
+        <select id="role" name="role">
+          <option value="admin">Admin</option>
+          <option value="customer">Customer</option>
+          <option value="expert">Expert</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" placeholder="Enter username" required />
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Enter password" required />
+      </div>
+
+      <button type="submit" class="btn btn-primary login-btn">Login</button>
+      <div id="login-error" class="error">Invalid username or password.</div>
+    </form>
+
+    <div class="demo-box">
+      <strong>Demo accounts</strong><br />
+      Admin: <strong>admin</strong> / <strong>admin</strong><br />
+      Customer: <strong>customer</strong> / <strong>customer</strong><br />
+      Expert: <strong>expert</strong> / <strong>expert</strong>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    const form = document.getElementById('login-form');
+    const errorBox = document.getElementById('login-error');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const role = document.getElementById('role').value;
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const result = loginDemoUser(username, role, password);
+
+      if (result) {
+        window.location.href = getUserHome(role);
+        return;
+      }
+
+      errorBox.classList.add('show');
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const roleSelect = document.getElementById('role');
+      const usernameInput = document.getElementById('username');
+      roleSelect.addEventListener('change', function () {
+        const value = this.value;
+        usernameInput.value = value;
+      });
+      usernameInput.value = roleSelect.value;
+    });
+  </script>
+</body>
+</html>

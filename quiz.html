@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plant Quiz — GreenNest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .quiz-shell{ max-width:640px; margin:0 auto; }
+  .progress-track{ height:5px; background:var(--line); border-radius:100px; overflow:hidden; margin-bottom:36px; }
+  .progress-fill{ height:100%; background:var(--gold); width:20%; transition:width .3s ease; }
+  .q-step{ display:none; }
+  .q-step.active{ display:block; }
+  .q-num{ font-family:'Space Mono',monospace; font-size:12px; color:var(--moss); letter-spacing:.08em; margin-bottom:10px; }
+  .q-title{ font-size:clamp(22px,3vw,30px); margin-bottom:26px; }
+  .opt-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:12px; }
+  .opt-card{
+    border:1.5px solid var(--line); border-radius:14px; padding:20px; background:#fff;
+    text-align:left; font-size:15px; font-weight:500; display:flex; flex-direction:column; gap:8px;
+    transition:all .18s ease;
+  }
+  .opt-card .ic{ font-size:22px; }
+  .opt-card:hover{ border-color:var(--moss); }
+  .opt-card.selected{ border-color:var(--gold); background:#FBF3E3; }
+  .q-nav{ display:flex; justify-content:space-between; margin-top:32px; }
+  .q-nav .btn-ghost:disabled{ opacity:.3; }
+
+  .result-wrap{ display:none; }
+  .result-wrap.active{ display:block; }
+  .result-head{ text-align:center; margin-bottom:36px; }
+  .result-head .tag{ font-family:'Space Mono',monospace; font-size:12px; color:var(--moss); letter-spacing:.1em; text-transform:uppercase; }
+  .result-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:16px; }
+  .result-card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; text-align:center; }
+  .result-card .img{ font-size:38px; margin-bottom:10px; }
+  .result-card h4{ font-size:15px; margin-bottom:4px; }
+  .result-card .why{ font-size:12px; color:rgba(22,48,42,.55); margin-bottom:10px; min-height:32px; }
+  .result-card .price{ font-weight:700; font-size:14px; margin-bottom:10px; }
+  .retake{ text-align:center; margin-top:34px; }
+
+</style>
+</head>
+<body data-page="quiz">
+
+<header>
+  <nav class="wrap">
+    <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#4E7A56"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#F5F1E6"/></svg>GreenNest</a>
+    <div class="navlinks" id="navlinks">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop</a>
+      <a href="quiz.html" class="active">Plant Quiz</a>
+      <a href="companion.html">Companion Planner</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="experts.html">Experts</a>
+    </div>
+    <div class="nav-icons">
+      <button class="icon-btn" onclick="location.href='dashboard.html'" title="Wishlist / Dashboard">♡<span class="badge" id="wishlist-badge" style="display:none;">0</span></button>
+      <button class="icon-btn" onclick="openDrawer('cart-drawer')" title="Cart">🛒<span class="badge" id="cart-badge" style="display:none;">0</span></button>
+      <button class="hamburger" onclick="toggleNav()">☰</button>
+    </div>
+  </nav>
+</header>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="eyebrow on-dark">Smart Plant Recommendation</div>
+    <h1>Find your right plant</h1>
+    <p>Five quick questions — based on real conditions, not guesswork. Get matched to plants from the GreenNest marketplace.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap quiz-shell">
+
+    <div id="quiz-flow">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+      <div class="q-step active" data-q="0">
+        <div class="q-num">Question 1 of 5</div>
+        <div class="q-title">Indoor or outdoor?</div>
+        <div class="opt-grid">
+          <button class="opt-card" data-key="env" data-val="Indoor"><span class="ic">🏠</span>Indoor</button>
+          <button class="opt-card" data-key="env" data-val="Outdoor"><span class="ic">🌤️</span>Outdoor</button>
+          <button class="opt-card" data-key="env" data-val="Balcony"><span class="ic">🏢</span>Balcony</button>
+          <button class="opt-card" data-key="env" data-val="Rooftop"><span class="ic">🏙️</span>Rooftop</button>
+        </div>
+      </div>
+
+      <div class="q-step" data-q="1">
+        <div class="q-num">Question 2 of 5</div>
+        <div class="q-title">How much sunlight do you get?</div>
+        <div class="opt-grid">
+          <button class="opt-card" data-key="light" data-val="low"><span class="ic">🌑</span>Low light</button>
+          <button class="opt-card" data-key="light" data-val="med"><span class="ic">⛅</span>Medium / indirect</button>
+          <button class="opt-card" data-key="light" data-val="high"><span class="ic">☀️</span>Bright / direct</button>
+          <button class="opt-card" data-key="light" data-val="any"><span class="ic">🌗</span>Not sure</button>
+        </div>
+      </div>
+
+      <div class="q-step" data-q="2">
+        <div class="q-num">Question 3 of 5</div>
+        <div class="q-title">What's your gardening experience?</div>
+        <div class="opt-grid">
+          <button class="opt-card" data-key="exp" data-val="beginner"><span class="ic">🌱</span>Beginner</button>
+          <button class="opt-card" data-key="exp" data-val="intermediate"><span class="ic">🌿</span>Some experience</button>
+          <button class="opt-card" data-key="exp" data-val="expert"><span class="ic">🌳</span>Experienced</button>
+        </div>
+      </div>
+
+      <div class="q-step" data-q="3">
+        <div class="q-num">Question 4 of 5</div>
+        <div class="q-title">What's your budget per plant?</div>
+        <div class="opt-grid">
+          <button class="opt-card" data-key="budget" data-val="low"><span class="ic">💸</span>Under NPR 200</button>
+          <button class="opt-card" data-key="budget" data-val="mid"><span class="ic">💰</span>NPR 200 – 600</button>
+          <button class="opt-card" data-key="budget" data-val="high"><span class="ic">💎</span>NPR 600+</button>
+        </div>
+      </div>
+
+      <div class="q-step" data-q="4">
+        <div class="q-num">Question 5 of 5</div>
+        <div class="q-title">How much time can you give to maintenance?</div>
+        <div class="opt-grid">
+          <button class="opt-card" data-key="time" data-val="low"><span class="ic">⏱️</span>Very little — low maintenance</button>
+          <button class="opt-card" data-key="time" data-val="mid"><span class="ic">🗓️</span>A little, a few times a week</button>
+          <button class="opt-card" data-key="time" data-val="high"><span class="ic">🧑‍🌾</span>I enjoy daily care</button>
+        </div>
+      </div>
+
+      <div class="q-nav">
+        <button class="btn btn-ghost" id="q-back" disabled>← Back</button>
+        <button class="btn btn-primary" id="q-next" disabled>Next →</button>
+      </div>
+    </div>
+
+    <div class="result-wrap" id="result-wrap">
+      <div class="result-head">
+        <div class="tag">Your matches</div>
+        <h2>Plants suited to your space</h2>
+      </div>
+      <div class="result-grid" id="result-grid"></div>
+      <div class="retake">
+        <button class="btn btn-ghost" onclick="restartQuiz()">Retake the quiz</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span><b>GreenNest</b> — Plant Recommendation Quiz</span>
+    <span>Project Proposal · Dept. of CSIT, Tribhuvan University</span>
+  </div>
+</footer>
+
+<div class="drawer-overlay" id="cart-drawer-overlay" onclick="closeDrawer('cart-drawer')"></div>
+<div class="drawer" id="cart-drawer">
+  <div class="drawer-head"><h3>Your Cart</h3><button class="modal-close" style="position:static;" onclick="closeDrawer('cart-drawer')">✕</button></div>
+  <div class="drawer-body" id="cart-drawer-body"></div>
+  <div class="drawer-foot">
+    <div style="display:flex; justify-content:space-between; font-weight:600; margin-bottom:14px;">
+      <span>Total</span><span id="cart-drawer-total">NPR 0</span>
+    </div>
+    <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="checkoutNow()">Checkout</button>
+  </div>
+</div>
+
+<div id="toast-holder"></div>
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script>
+  const answers = {};
+  let currentQ = 0;
+  const totalQ = 5;
+
+  const steps = document.querySelectorAll(".q-step");
+  const nextBtn = document.getElementById("q-next");
+  const backBtn = document.getElementById("q-back");
+
+  document.querySelectorAll(".opt-card").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const step = btn.closest(".q-step");
+      step.querySelectorAll(".opt-card").forEach(b=>b.classList.remove("selected"));
+      btn.classList.add("selected");
+      answers[btn.dataset.key] = btn.dataset.val;
+      nextBtn.disabled = false;
+    });
+  });
+
+  function showStep(i){
+    steps.forEach(s=> s.classList.toggle("active", Number(s.dataset.q)===i));
+    document.getElementById("progress-fill").style.width = `${((i+1)/totalQ)*100}%`;
+    backBtn.disabled = i===0;
+    const key = steps[i].querySelector(".opt-card").dataset.key;
+    nextBtn.disabled = !answers[key];
+    nextBtn.textContent = i===totalQ-1 ? "See my matches →" : "Next →";
+  }
+
+  nextBtn.addEventListener("click", ()=>{
+    if(currentQ < totalQ-1){ currentQ++; showStep(currentQ); }
+    else { showResults(); }
+  });
+  backBtn.addEventListener("click", ()=>{
+    if(currentQ > 0){ currentQ--; showStep(currentQ); }
+  });
+
+  function scoreProduct(p){
+    let score = 0;
+    let reasons = [];
+    if(p.env.includes(answers.env)){ score += 3; reasons.push(`fits ${answers.env.toLowerCase()} spaces`); }
+    if(answers.light==="any" || p.light===answers.light || p.light==="any"){ score += 2; }
+    if(answers.budget==="low" && p.price<=200){ score += 2; reasons.push("within budget"); }
+    if(answers.budget==="mid" && p.price>200 && p.price<=600){ score += 2; reasons.push("within budget"); }
+    if(answers.budget==="high" && p.price>600){ score += 1; }
+    if(answers.budget!=="high" && p.price<=600){ score += 1; }
+    if(answers.time==="low" && (p.name.includes("Snake") || p.name.includes("Pothos") || p.category==="Pots" && p.name.includes("Self"))){ score += 2; reasons.push("low maintenance"); }
+    if(answers.exp==="beginner" && (p.category==="Plants")){ score += 1; }
+    if(p.category==="Plants") score += 1; // prioritise plants in a plant quiz
+    return { score, reason: reasons[0] || "matches your conditions" };
+  }
+
+  function showResults(){
+    document.getElementById("quiz-flow").style.display = "none";
+    const resultWrap = document.getElementById("result-wrap");
+    resultWrap.classList.add("active");
+
+    const scored = PRODUCTS
+      .filter(p=>p.category==="Plants")
+      .map(p=>({ p, ...scoreProduct(p) }))
+      .sort((a,b)=>b.score-a.score)
+      .slice(0,6);
+
+    document.getElementById("result-grid").innerHTML = scored.map(({p,reason})=>`
+      <div class="result-card">
+        <div class="img">${p.img}</div>
+        <h4>${p.name}</h4>
+        <div class="why">Recommended: ${reason}</div>
+        <div class="price">NPR ${p.price}</div>
+        <button class="btn btn-primary btn-sm" style="width:100%; justify-content:center;" onclick="addToCart(${p.id})">Add to cart</button>
+      </div>
+    `).join("");
+  }
+
+  function restartQuiz(){
+    Object.keys(answers).forEach(k=>delete answers[k]);
+    document.querySelectorAll(".opt-card").forEach(b=>b.classList.remove("selected"));
+    currentQ = 0;
+    document.getElementById("result-wrap").classList.remove("active");
+    document.getElementById("quiz-flow").style.display = "block";
+    showStep(0);
+  }
+
+  showStep(0);
+</script>
+</body>
+</html>
