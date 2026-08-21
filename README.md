@@ -5,10 +5,8 @@ Plain HTML/CSS/JavaScript — no install, no build step, no server required.
 
 ## How to run it
 
-1. Unzip this folder.
-2. Double-click `index.html` to open it in your browser (Chrome, Edge, or Firefox recommended).
-3. Click through the nav: **Home → Shop → Plant Quiz → Companion Planner → Dashboard → Experts**.
-4. Use the **"Customer view ▾"** switcher in the top-right of the nav to jump to the **Expert Panel** or **Admin Panel** — these are separate, role-based screens matching the three system modules in the proposal.
+1. Double-click `index.html` to open it in your browser (Chrome, Edge, or Firefox recommended).
+2. Click through the nav: **Home → Shop → Plant Quiz → Companion Planner → Dashboard → Experts**.
 
 State (cart, wishlist, plants, journal, orders, bookings) is saved in the browser's local storage, so it survives page reloads. Keep an internet connection open for Google Fonts and the live weather API on the Dashboard; the site still works offline, just with fallback system fonts and a "weather unavailable" message.
 
