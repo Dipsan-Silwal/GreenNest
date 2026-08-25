@@ -148,8 +148,9 @@
     <div class="admin-view" id="view-products">
       <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Manage products &amp; categories</h2></div>
       <form class="inventory-form" id="product-form">
-        <h3>Add a flower to inventory</h3>
-        <p>New flowers are saved in this browser and appear in the customer shop immediately.</p>
+        <h3 id="product-form-title">Add a flower to inventory</h3>
+        <p id="product-form-help">New flowers are saved in this browser and appear in the customer shop immediately.</p>
+        <input id="product-id" type="hidden">
         <div class="inventory-grid">
           <input id="product-name" placeholder="Flower name" required>
           <select id="product-category"><option value="Flowers">Flowers</option><option value="Plants">Plants</option><option value="Seeds">Seeds</option><option value="Fertilizers">Fertilizers</option><option value="Pots">Pots</option><option value="Accessories">Accessories</option></select>
@@ -161,7 +162,7 @@
           <input id="product-image" type="url" placeholder="Image URL (optional)">
           <input id="product-desc" placeholder="Short description" required>
         </div>
-        <div class="form-actions"><button class="btn btn-primary btn-sm" type="submit">Add to inventory</button><span class="inventory-message" id="product-message"></span></div>
+        <div class="form-actions"><button class="btn btn-primary btn-sm" id="product-submit" type="submit">Add to inventory</button><button class="btn btn-sm" id="product-cancel" type="button" style="display:none;">Cancel</button><span class="inventory-message" id="product-message"></span></div>
       </form>
       <div class="table-wrap">
         <table class="data-table">
@@ -289,7 +290,7 @@
         <td>NPR ${p.price}</td>
         <td class="${p.stock<10 ? 'stock-low' : ''}"><span class="status-dot ${p.stock<10?'low':'ok'}"></span>${p.stock}${p.stock===0 ? ' (out)' : ''}</td>
         <td>${p.env.join(", ")}</td>
-        <td><div class="row-actions"><button onclick="editProduct(${p.id})">Edit stock</button><button class="danger" onclick="removeProduct(${p.id})">Remove</button></div></td>
+        <td><div class="row-actions"><button onclick="editProduct(${p.id})">Edit</button><button class="danger" onclick="removeProduct(${p.id})">Remove</button></div></td>
       </tr>
     `).join("");
   }
@@ -297,15 +298,30 @@
   function editProduct(productId){
     const product = PRODUCTS.find(p=>p.id===productId);
     if(!product) return;
-    const stock = prompt(`Update stock for ${product.name}:`, product.stock);
-    if(stock === null) return;
-    const nextStock = Number(stock);
-    if(!Number.isInteger(nextStock) || nextStock < 0){ toast("Stock must be a whole number of 0 or more"); return; }
-    product.stock = nextStock;
-    saveProducts();
-    renderProducts();
-    renderKPIs();
-    toast(`${product.name} stock updated`);
+    document.getElementById("product-id").value = product.id;
+    document.getElementById("product-name").value = product.name;
+    document.getElementById("product-category").value = product.category;
+    document.getElementById("product-price").value = product.price;
+    document.getElementById("product-stock").value = product.stock;
+    document.getElementById("product-env").value = product.env.join(", ");
+    document.getElementById("product-image").value = product.image || "";
+    document.getElementById("product-desc").value = product.desc || "";
+    document.getElementById("product-form-title").textContent = `Edit ${product.name}`;
+    document.getElementById("product-form-help").textContent = "Update the product details and save your changes to the shop inventory.";
+    document.getElementById("product-submit").textContent = "Save changes";
+    document.getElementById("product-cancel").style.display = "inline-flex";
+    document.getElementById("product-message").textContent = "";
+    document.getElementById("product-form").scrollIntoView({ behavior:"smooth", block:"center" });
+  }
+
+  function resetProductForm(){
+    const form = document.getElementById("product-form");
+    form.reset();
+    document.getElementById("product-id").value = "";
+    document.getElementById("product-form-title").textContent = "Add a flower to inventory";
+    document.getElementById("product-form-help").textContent = "New flowers are saved in this browser and appear in the customer shop immediately.";
+    document.getElementById("product-submit").textContent = "Add to inventory";
+    document.getElementById("product-cancel").style.display = "none";
   }
 
   function removeProduct(productId){
@@ -328,23 +344,34 @@
       document.getElementById("product-message").textContent = "Enter a valid name, price, stock and environment.";
       return;
     }
-    PRODUCTS.push({
-      id: PRODUCTS.reduce((max, product)=>Math.max(max, Number(product.id)||0), 0) + 1,
+    const productId = Number(document.getElementById("product-id").value);
+    const productDetails = {
       name,
       category: document.getElementById("product-category").value,
       env,
-      light:"high",
       price,
       stock,
       image: document.getElementById("product-image").value.trim() || "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=700&q=80",
       desc: document.getElementById("product-desc").value.trim() || "Freshly stocked flower for your garden."
-    });
+    };
+    if(productId){
+      const product = PRODUCTS.find(item=>item.id===productId);
+      if(product) Object.assign(product, productDetails);
+    }else{
+      PRODUCTS.push({
+        id: PRODUCTS.reduce((max, product)=>Math.max(max, Number(product.id)||0), 0) + 1,
+        light:"high",
+        ...productDetails
+      });
+    }
     saveProducts();
-    event.target.reset();
-    document.getElementById("product-message").textContent = `${name} added to inventory.`;
+    resetProductForm();
+    document.getElementById("product-message").textContent = `${name} ${productId ? "updated" : "added to inventory"}.`;
     renderProducts();
     renderKPIs();
   });
+
+  document.getElementById("product-cancel").addEventListener("click", resetProductForm);
 
   function renderExperts(){
     document.getElementById("experts-body").innerHTML = EXPERTS.map(e=>`
