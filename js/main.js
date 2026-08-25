@@ -16,8 +16,12 @@ const LS = {
 
 const DEMO_USERS = {
   admin: { username: "admin", password: "admin", role: "admin", label: "Admin" },
-  customer: { username: "customer", password: "customer", role: "customer", label: "Customer" },
-  expert: { username: "expert", password: "expert", role: "expert", label: "Expert" },
+  customer: { username: "customer", password: "customer", role: "customer", label: "Aanya Sharma" },
+  meera: { username: "meera", password: "meera", role: "customer", label: "Meera Koirala" },
+  sujan: { username: "sujan", password: "sujan", role: "customer", label: "Sujan Bhandari" },
+  expert: { username: "expert", password: "expert", role: "expert", label: "Sabina Gurung" },
+  bikash: { username: "bikash", password: "bikash", role: "expert", label: "Bikash Thapa" },
+  anisha: { username: "anisha", password: "anisha", role: "expert", label: "Anisha Rai" },
 };
 
 function getSession(){ return readLS(LS.session, null); }
@@ -30,13 +34,20 @@ function getUserHome(role){
 }
 function loginDemoUser(username, role, password){
   const roleKey = String(role || "").trim().toLowerCase();
-  const user = DEMO_USERS[roleKey];
+  const user = Object.values(DEMO_USERS).find(account=>account.username === String(username || "").trim().toLowerCase());
   if(!user) return false;
-  if(String(username || "").trim().toLowerCase() !== user.username) return false;
+  if(user.role !== roleKey) return false;
   if(String(password || "") !== user.password) return false;
   const session = { username: user.username, role: user.role, label: user.label };
   setSession(session);
   return session;
+}
+function switchDemoAccount(username){
+  const account = DEMO_USERS[String(username || "").trim().toLowerCase()];
+  const current = getSession();
+  if(!account || !current || account.role !== current.role) return;
+  setSession({ username:account.username, role:account.role, label:account.label });
+  window.location.href = getUserHome(account.role);
 }
 function logoutUser(){
   clearSession();
@@ -48,8 +59,11 @@ function ensureAuthUI(){
   const session = getSession();
   const wrapper = document.createElement("div");
   wrapper.className = "auth-user";
+  const accounts = session && ["customer", "expert"].includes(session.role)
+    ? Object.values(DEMO_USERS).filter(account=>account.role===session.role)
+    : [];
   wrapper.innerHTML = `
-    <span id="user-pill" class="user-pill">${session ? session.label : "Guest"}</span>
+    ${accounts.length ? `<select class="account-switcher" aria-label="Switch account" title="Switch account" onchange="switchDemoAccount(this.value)">${accounts.map(account=>`<option value="${account.username}" ${account.username===session.username?'selected':''}>${account.label}</option>`).join("")}</select>` : `<span id="user-pill" class="user-pill">${session ? session.label : "Guest"}</span>`}
     <button id="logout-btn" class="logout-btn" type="button" onclick="logoutUser()">Logout</button>
   `;
   nav.appendChild(wrapper);
