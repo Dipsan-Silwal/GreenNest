@@ -48,6 +48,18 @@
   .summary-row{ display:flex; justify-content:space-between; font-size:13.5px; padding:9px 0; border-bottom:1px dashed var(--line); }
   .summary-row:last-child{ border-bottom:none; }
 
+  .wallet-card{ background:linear-gradient(135deg,var(--forest),#2d6048); color:#fff; border-radius:16px; padding:22px; margin-bottom:20px; }
+  .wallet-card .wallet-label{ color:var(--sage); font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
+  .wallet-card .wallet-balance{ font-family:'Fraunces',serif; font-size:32px; margin:8px 0 16px; }
+  .wallet-card .wallet-form{ display:grid; gap:8px; }
+  .wallet-card input{ width:100%; border:1px solid rgba(255,255,255,.2); border-radius:9px; padding:9px 10px; background:rgba(255,255,255,.1); color:#fff; }
+  .wallet-card input::placeholder{ color:rgba(255,255,255,.6); }
+  .wallet-card .wallet-message{ font-size:12px; color:var(--sage); min-height:18px; }
+  .wallet-ledger{ margin-top:14px; border-top:1px solid rgba(255,255,255,.15); padding-top:10px; }
+  .wallet-ledger .summary-row{ color:var(--sage); border-color:rgba(255,255,255,.12); font-size:12px; }
+  .wallet-ledger .credit{ color:#9ee0a9; }
+  .wallet-ledger .debit{ color:#f0b19d; }
+
   @media (max-width:900px){ .dash-grid{ grid-template-columns:1fr; } }
 </style>
 </head>
@@ -83,6 +95,19 @@
 <section>
   <div class="wrap dash-grid">
     <div>
+      <div class="wallet-card">
+        <div class="wallet-label">My GreenNest wallet</div>
+        <div class="wallet-balance" id="wallet-balance">NPR 0</div>
+        <form class="wallet-form" id="wallet-topup-form">
+          <input id="wallet-amount" type="number" min="100" max="50000" step="100" placeholder="Top-up amount (NPR)" required>
+          <input id="wallet-esewa" type="text" inputmode="numeric" maxlength="10" placeholder="eSewa mobile number" required>
+          <input id="wallet-mpin" type="password" inputmode="numeric" maxlength="4" placeholder="eSewa demo MPIN" required>
+          <button class="btn btn-gold btn-block" type="submit">Load wallet with eSewa</button>
+          <div class="wallet-message" id="wallet-message">Approved demo: 9800000000 / 1234</div>
+        </form>
+        <div class="wallet-ledger" id="wallet-ledger"></div>
+      </div>
+
       <div class="panel">
         <h3>My Plants <button class="btn btn-primary btn-sm" onclick="openModal('add-plant-modal')">+ Add plant</button></h3>
         <div id="plants-list"></div>
@@ -322,7 +347,7 @@
 
   /* ---------- Orders ---------- */
   function renderOrders(){
-    const orders = readLS(LS.orders, []);
+    const orders = getUserOrders();
     const box = document.getElementById("orders-list");
     if(orders.length===0){ box.innerHTML = `<div class="empty-mini">No orders yet — place one from the shop.</div>`; return; }
     box.innerHTML = orders.map(o=>`
@@ -331,6 +356,22 @@
         <span>NPR ${o.total.toLocaleString()}</span>
       </div>`).join("");
   }
+
+  function renderWallet(){
+    document.getElementById("wallet-balance").textContent = "NPR " + getWalletBalance().toLocaleString();
+    const transactions = getWallet().transactions.slice(0, 5);
+    document.getElementById("wallet-ledger").innerHTML = transactions.length ? transactions.map(t=>`
+      <div class="summary-row"><span>${t.label}</span><span class="${t.type}">${t.type === "credit" ? "+" : "-"} NPR ${t.amount.toLocaleString()}</span></div>`).join("")
+      : `<div style="font-size:12px;color:var(--sage);">No wallet transactions yet.</div>`;
+  }
+
+  document.getElementById("wallet-topup-form").addEventListener("submit", (event)=>{
+    event.preventDefault();
+    const result = topUpWallet(document.getElementById("wallet-amount").value, document.getElementById("wallet-esewa").value, document.getElementById("wallet-mpin").value);
+    const message = document.getElementById("wallet-message");
+    message.textContent = result.ok ? `Wallet loaded. New balance: NPR ${result.balance.toLocaleString()}.` : result.message;
+    if(result.ok){ event.target.reset(); renderWallet(); }
+  });
 
   /* ---------- Bookings ---------- */
   function renderBookings(){
@@ -348,6 +389,7 @@
   renderWishlist();
   renderOrders();
   renderBookings();
+  renderWallet();
 </script>
 </body>
 </html>

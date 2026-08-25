@@ -11,6 +11,7 @@ const LS = {
   orders: "greennest_orders",
   plants: "greennest_plants",
   session: "greennest_session",
+  wallets: "greennest_wallets",
 };
 
 const DEMO_USERS = {
@@ -78,6 +79,7 @@ function checkPageAccess(){
     quiz: ["customer", "expert", "admin"],
     companion: ["customer", "expert", "admin"],
     dashboard: ["customer", "admin"],
+    checkout: ["customer", "expert", "admin"],
     experts: ["customer", "expert", "admin"],
     admin: ["admin"],
     "expert-panel": ["expert", "admin"],
@@ -97,10 +99,69 @@ function readLS(key, fallback){
 function writeLS(key, value){
   try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){ /* storage unavailable */ }
 }
+function userStorageKey(key){
+  const username = getSession()?.username || "guest";
+  return `${key}_${username}`;
+}
+
+/* ---------------- WALLETS ---------------- */
+const WALLET_STARTING_BALANCES = { customer: 5000, expert: 3000, admin: 0 };
+const MERCHANT_USERNAME = "admin";
+
+function getWallets(){
+  const wallets = readLS(LS.wallets, {});
+  Object.entries(WALLET_STARTING_BALANCES).forEach(([username, balance])=>{
+    if(!wallets[username]) wallets[username] = { balance, transactions: [] };
+  });
+  writeLS(LS.wallets, wallets);
+  return wallets;
+}
+function getWallet(username=getSession()?.username){
+  if(!username) return { balance: 0, transactions: [] };
+  const wallets = getWallets();
+  if(!wallets[username]) wallets[username] = { balance: 0, transactions: [] };
+  writeLS(LS.wallets, wallets);
+  return wallets[username];
+}
+function getWalletBalance(username=getSession()?.username){ return Number(getWallet(username).balance) || 0; }
+function addWalletTransaction(wallet, transaction){
+  wallet.transactions.unshift({ ...transaction, date: new Date().toISOString() });
+}
+function topUpWallet(amount, esewaId, mpin){
+  const value = Number(amount);
+  const walletId = String(esewaId || "").replace(/\D/g, "");
+  if(!getSession() || !Number.isFinite(value) || value < 100 || value > 50000) return { ok:false, message:"Enter an amount between NPR 100 and NPR 50,000." };
+  if(walletId !== "9800000000" || String(mpin || "") !== "1234") return { ok:false, message:"Top-up declined. Use the approved demo eSewa ID and MPIN." };
+  const wallets = getWallets();
+  const wallet = wallets[getSession().username] || { balance:0, transactions:[] };
+  wallet.balance += value;
+  addWalletTransaction(wallet, { type:"credit", amount:value, label:"eSewa top-up", reference:"ES" + Date.now().toString().slice(-8) });
+  wallets[getSession().username] = wallet;
+  writeLS(LS.wallets, wallets);
+  return { ok:true, balance:wallet.balance };
+}
+function chargeWallet(senderUsername, receiverUsername, amount, reference){
+  const value = Number(amount);
+  const wallets = getWallets();
+  const sender = wallets[senderUsername] || { balance:0, transactions:[] };
+  const receiver = wallets[receiverUsername] || { balance:0, transactions:[] };
+  if(sender.balance < value) return { ok:false, message:`Insufficient wallet balance. Available: NPR ${sender.balance.toLocaleString()}.` };
+  sender.balance -= value;
+  receiver.balance += value;
+  addWalletTransaction(sender, { type:"debit", amount:value, label:"Payment to GreenNest", reference });
+  addWalletTransaction(receiver, { type:"credit", amount:value, label:`Payment from ${senderUsername}`, reference });
+  wallets[senderUsername] = sender;
+  wallets[receiverUsername] = receiver;
+  writeLS(LS.wallets, wallets);
+  return { ok:true, senderBalance:sender.balance, receiverBalance:receiver.balance };
+}
+function getUserOrders(username=getSession()?.username){
+  return readLS(LS.orders, []).filter(order=>order.customerUsername === username);
+}
 
 /* ---------------- CART ---------------- */
-function getCart(){ return readLS(LS.cart, []); }
-function setCart(cart){ writeLS(LS.cart, cart); updateBadges(); }
+function getCart(){ return readLS(userStorageKey(LS.cart), []); }
+function setCart(cart){ writeLS(userStorageKey(LS.cart), cart); updateBadges(); }
 function addToCart(productId, qty=1){
   const cart = getCart();
   const existing = cart.find(i=>i.id===productId);
@@ -129,28 +190,38 @@ function cartTotal(){
 }
 
 /* ---------------- WISHLIST ---------------- */
-function getWishlist(){ return readLS(LS.wishlist, []); }
+function getWishlist(){ return readLS(userStorageKey(LS.wishlist), []); }
 function toggleWishlist(productId){
   let wl = getWishlist();
   if(wl.includes(productId)){ wl = wl.filter(id=>id!==productId); toast("Removed from wishlist"); }
   else { wl.push(productId); toast("Saved to wishlist"); }
-  writeLS(LS.wishlist, wl);
+  writeLS(userStorageKey(LS.wishlist), wl);
   updateBadges();
   return wl.includes(productId);
 }
 function isWishlisted(productId){ return getWishlist().includes(productId); }
 
 /* ---------------- ORDERS (checkout) ---------------- */
-function placeOrder(){
+function placeOrder(shippingDetails=null){
   const cart = getCart();
   if(cart.length===0) return null;
+  const session = getSession();
+  const total = cartTotal();
+  const orderId = "GN" + Date.now().toString().slice(-8);
+  const payment = session ? chargeWallet(session.username, MERCHANT_USERNAME, total, orderId) : { ok:false, message:"Please log in before paying." };
+  if(!payment.ok) return { error:payment.message };
   const orders = readLS(LS.orders, []);
   const order = {
-    id: "GN" + Date.now().toString().slice(-8),
+    id: orderId,
     items: cart,
-    total: cartTotal(),
+    total,
     date: new Date().toISOString(),
   };
+  if(shippingDetails) order.shipping = shippingDetails;
+  if(session){
+    order.customerUsername = session.username;
+    order.customerName = session.label;
+  }
   orders.unshift(order);
   writeLS(LS.orders, orders);
   setCart([]);
@@ -158,30 +229,30 @@ function placeOrder(){
 }
 
 /* ---------------- MY PLANTS + JOURNAL ---------------- */
-function getPlants(){ return readLS(LS.plants, []); }
+function getPlants(){ return readLS(userStorageKey(LS.plants), []); }
 function addPlant(plant){
   const plants = getPlants();
   plant.id = "P" + Date.now();
   plant.addedOn = new Date().toISOString();
   plants.unshift(plant);
-  writeLS(LS.plants, plants);
+  writeLS(userStorageKey(LS.plants), plants);
   return plant;
 }
 function removePlant(plantId){
-  writeLS(LS.plants, getPlants().filter(p=>p.id!==plantId));
-  const j = readLS(LS.journal, {});
+  writeLS(userStorageKey(LS.plants), getPlants().filter(p=>p.id!==plantId));
+  const j = readLS(userStorageKey(LS.journal), {});
   delete j[plantId];
-  writeLS(LS.journal, j);
+  writeLS(userStorageKey(LS.journal), j);
 }
 function getJournal(plantId){
-  const all = readLS(LS.journal, {});
+  const all = readLS(userStorageKey(LS.journal), {});
   return all[plantId] || [];
 }
 function addJournalEntry(plantId, note){
-  const all = readLS(LS.journal, {});
+  const all = readLS(userStorageKey(LS.journal), {});
   if(!all[plantId]) all[plantId] = [];
   all[plantId].unshift({ note, date: new Date().toISOString() });
-  writeLS(LS.journal, all);
+  writeLS(userStorageKey(LS.journal), all);
 }
 
 /* ---------------- BOOKINGS ---------------- */
@@ -294,11 +365,8 @@ function renderCartDrawer(){
 }
 
 function checkoutNow(){
-  const order = placeOrder();
-  if(!order){ toast("Your cart is empty"); return; }
-  renderCartDrawer();
-  toast(`Order ${order.id} placed — NPR ${order.total.toLocaleString()}`);
-  closeDrawer("cart-drawer");
+  if(getCart().length===0){ toast("Your cart is empty"); return; }
+  window.location.href = "checkout.html";
 }
 
 function openDrawer(id){

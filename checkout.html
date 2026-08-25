@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — GreenNest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .checkout-grid{ display:grid; grid-template-columns:1fr 380px; gap:28px; align-items:start; }
+  @media (max-width:880px){ .checkout-grid{ grid-template-columns:1fr; } }
+
+  .co-steps{ display:flex; gap:10px; margin-bottom:28px; font-family:'Space Mono',monospace; font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; color:rgba(22,48,42,.4); }
+  .co-steps .step.active{ color:var(--forest); font-weight:700; }
+  .co-steps .step:not(:last-child)::after{ content:'→'; margin-left:10px; color:rgba(22,48,42,.25); }
+
+  .co-view{ display:none; }
+  .co-view.active{ display:block; }
+
+  .summary-row{ display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); align-items:center; }
+  .summary-row:last-of-type{ border-bottom:none; }
+  .summary-row .thumb{ width:44px; height:44px; border-radius:10px; flex-shrink:0; overflow:hidden; }
+  .summary-row .thumb img{ width:100%; height:100%; object-fit:cover; }
+  .summary-row .info{ flex:1; }
+  .summary-row .info .name{ font-size:13.5px; font-weight:600; }
+  .summary-row .info .qty{ font-size:12px; color:rgba(22,48,42,.55); margin-top:2px; }
+  .summary-row .amt{ font-size:13.5px; font-weight:600; }
+  .summary-total{ display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:16px; border-top:1.5px solid var(--line); font-size:16px; font-weight:700; }
+
+  .card-preview{ background:linear-gradient(135deg, var(--forest), #214837); border-radius:16px; padding:22px 24px; color:#fff; margin-bottom:22px; position:relative; overflow:hidden; }
+  .card-preview::after{ content:''; position:absolute; right:-30px; top:-30px; width:140px; height:140px; border-radius:50%; background:rgba(217,164,72,.18); }
+  .card-preview .cnum{ font-family:'Space Mono',monospace; font-size:17px; letter-spacing:.12em; margin:22px 0 16px; }
+  .card-preview .crow{ display:flex; justify-content:space-between; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--sage); }
+  .card-preview .crow b{ display:block; font-size:12.5px; color:#fff; letter-spacing:.02em; text-transform:none; margin-top:3px; }
+
+  .pay-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .test-hint{ font-size:11.5px; color:rgba(22,48,42,.5); margin-top:14px; line-height:1.6; }
+  .test-hint code{ background:var(--clay); padding:2px 6px; border-radius:5px; font-family:'Space Mono',monospace; }
+
+  .field-error{ font-size:11.5px; color:var(--danger); margin-top:4px; display:none; }
+  .field-error.show{ display:block; }
+
+  .result-shell{ text-align:center; padding:30px 10px; }
+  .result-icon{ width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:32px; }
+  .result-icon.ok{ background:#EAF3EA; color:var(--success); }
+  .result-icon.fail{ background:#FBEDE8; color:var(--danger); }
+  .result-shell h2{ font-size:24px; margin-bottom:8px; }
+  .result-shell p{ color:rgba(22,48,42,.62); font-size:14px; max-width:380px; margin:0 auto; }
+  .result-meta{ margin-top:22px; display:inline-block; text-align:left; background:var(--clay); border-radius:12px; padding:16px 20px; font-size:13px; }
+  .result-meta div{ display:flex; justify-content:space-between; gap:30px; padding:4px 0; }
+  .result-actions{ margin-top:26px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+
+  .spinner{ width:18px; height:18px; border-radius:50%; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff; animation:spin .7s linear infinite; display:inline-block; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body data-page="checkout">
+
+<header>
+  <nav class="wrap">
+    <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#4E7A56"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#F5F1E6"/></svg>GreenNest</a>
+    <div class="navlinks" id="navlinks">
+      <a href="index.html">Home</a>
+      <a href="shop.html">Shop</a>
+      <a href="quiz.html">Plant Quiz</a>
+      <a href="companion.html">Companion Planner</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="experts.html">Experts</a>
+    </div>
+    <div class="nav-icons">
+      <button class="icon-btn" onclick="location.href='dashboard.html'" title="Wishlist / Dashboard">♡<span class="badge" id="wishlist-badge" style="display:none;">0</span></button>
+      <button class="icon-btn" onclick="openDrawer('cart-drawer')" title="Cart">🛒<span class="badge" id="cart-badge" style="display:none;">0</span></button>
+      <button class="hamburger" onclick="toggleNav()">☰</button>
+    </div>
+  </nav>
+</header>
+
+<section class="page-hero">
+  <div class="wrap">
+    <div class="eyebrow on-dark">Secure Checkout</div>
+    <h1>Complete your order</h1>
+    <p>Review your cart, then confirm payment through our simulated payment gateway.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+
+    <div class="co-steps">
+      <span class="step active" id="step-label-1">1. Review order</span>
+      <span class="step" id="step-label-2">2. Shipping details</span>
+      <span class="step" id="step-label-3">3. eSewa payment</span>
+      <span class="step" id="step-label-4">4. Confirmation</span>
+    </div>
+
+    <div class="checkout-grid">
+
+      <div>
+        <!-- Step 1: review -->
+        <div class="co-view active card" id="view-review">
+          <h3 style="font-size:18px; margin-bottom:14px;">Your order</h3>
+          <div id="review-rows"></div>
+          <div class="summary-total"><span>Total</span><span id="review-total">NPR 0</span></div>
+          <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="goToPayment()">Proceed to payment →</button>
+        </div>
+
+        <!-- Step 2: delivery details -->
+        <div class="co-view card" id="view-shipping">
+          <h3 style="font-size:18px; margin-bottom:6px;">Where should we deliver?</h3>
+          <p style="font-size:13px; color:rgba(22,48,42,.6); margin-bottom:18px;">Add the recipient and delivery address for your GreenNest order.</p>
+          <form id="shipping-form">
+            <div class="pay-row">
+              <div class="field">
+                <label for="shipping-name">Recipient name</label>
+                <input type="text" id="shipping-name" placeholder="Full name" autocomplete="name" required>
+                <div class="field-error" id="err-shipping-name">Enter the recipient name.</div>
+              </div>
+              <div class="field">
+                <label for="shipping-phone">Phone number</label>
+                <input type="tel" id="shipping-phone" placeholder="98XXXXXXXX" maxlength="10" inputmode="numeric" autocomplete="tel" required>
+                <div class="field-error" id="err-shipping-phone">Enter a valid 10-digit phone number.</div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="shipping-address">Delivery address</label>
+              <textarea id="shipping-address" rows="3" placeholder="House number, street and area" autocomplete="street-address" required></textarea>
+              <div class="field-error" id="err-shipping-address">Enter the delivery address.</div>
+            </div>
+            <div class="field">
+              <label for="shipping-city">City</label>
+              <input type="text" id="shipping-city" placeholder="Kathmandu" autocomplete="address-level2" required>
+              <div class="field-error" id="err-shipping-city">Enter the delivery city.</div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top:10px;">Continue to eSewa payment →</button>
+          </form>
+        </div>
+
+        <!-- Step 3: simulated eSewa gateway -->
+        <div class="co-view card" id="view-payment">
+          <h3 style="font-size:18px; margin-bottom:6px;">Payment details</h3>
+          <p style="font-size:13px; color:rgba(22,48,42,.6); margin-bottom:18px;">Pay from your GreenNest wallet after eSewa authorization. Available balance: <b id="checkout-balance">NPR 0</b></p>
+
+          <div class="card-preview">
+            <div class="crow"><span>eSewa</span><span>GreenNest Demo</span></div>
+            <div class="cnum" id="preview-number">eSewa Wallet</div>
+            <div class="crow">
+              <span>Wallet ID<b id="preview-name">YOUR MOBILE</b></span>
+              <span>Amount<b id="preview-expiry">NPR 0</b></span>
+            </div>
+          </div>
+
+          <form id="payment-form">
+            <div class="field">
+              <label>eSewa ID / mobile number</label>
+              <input type="text" id="pay-name" placeholder="98XXXXXXXX" maxlength="10" inputmode="numeric" required>
+              <div class="field-error" id="err-name">Enter a valid 10-digit eSewa ID or mobile number.</div>
+            </div>
+            <div class="field">
+              <label>Demo eSewa MPIN</label>
+              <input type="password" id="pay-cvv" placeholder="1234" maxlength="4" inputmode="numeric" required>
+              <div class="field-error" id="err-cvv">Enter the 4-digit demo MPIN.</div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top:10px;" id="pay-submit-btn">
+              <span id="pay-btn-label">Pay with eSewa</span>
+            </button>
+          </form>
+
+          <div class="test-hint">
+            Demo eSewa ID — <code>9800000000</code> simulates an approved payment.
+            <code>9811111111</code> simulates a declined payment. Use <code>1234</code> as the demo MPIN.
+          </div>
+        </div>
+
+        <!-- Step 4: result -->
+        <div class="co-view card" id="view-result">
+          <div class="result-shell" id="result-shell"></div>
+        </div>
+      </div>
+
+      <!-- Order summary sidebar -->
+      <div class="card">
+        <h3 style="font-size:15.5px; margin-bottom:14px;">Order summary</h3>
+        <div id="sidebar-rows"></div>
+        <div class="summary-total"><span>Total</span><span id="sidebar-total">NPR 0</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span><b>GreenNest</b> — Checkout &amp; Payment Simulation</span>
+    <span>Project Proposal · Dept. of CSIT, Tribhuvan University</span>
+  </div>
+</footer>
+
+<div class="drawer-overlay" id="cart-drawer-overlay" onclick="closeDrawer('cart-drawer')"></div>
+<div class="drawer" id="cart-drawer">
+  <div class="drawer-head"><h3>Your Cart</h3><button class="modal-close" style="position:static;" onclick="closeDrawer('cart-drawer')">✕</button></div>
+  <div class="drawer-body" id="cart-drawer-body"></div>
+  <div class="drawer-foot">
+    <div style="display:flex; justify-content:space-between; font-weight:600; margin-bottom:14px;">
+      <span>Total</span><span id="cart-drawer-total">NPR 0</span>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="checkoutNow()">Checkout</button>
+  </div>
+</div>
+
+<div id="toast-holder"></div>
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script>
+  // If the cart is empty on arrival, there's nothing to check out.
+  if(getCart().length === 0){
+    window.location.href = "shop.html";
+  }
+
+  function renderOrderRows(containerId){
+    const cart = getCart();
+    const box = document.getElementById(containerId);
+    box.innerHTML = cart.map(i=>{
+      const p = PRODUCTS.find(x=>x.id===i.id);
+      if(!p) return "";
+      return `
+        <div class="summary-row">
+          <div class="thumb"><img src="${p.image}" alt="${p.name}"></div>
+          <div class="info">
+            <div class="name">${p.name}</div>
+            <div class="qty">Qty ${i.qty} × NPR ${p.price}</div>
+          </div>
+          <div class="amt">NPR ${(p.price*i.qty).toLocaleString()}</div>
+        </div>`;
+    }).join("");
+  }
+
+  function renderSummaries(){
+    renderOrderRows("review-rows");
+    renderOrderRows("sidebar-rows");
+    const total = "NPR " + cartTotal().toLocaleString();
+    document.getElementById("review-total").textContent = total;
+    document.getElementById("sidebar-total").textContent = total;
+    document.getElementById("preview-expiry").textContent = total;
+  }
+  renderSummaries();
+
+  function setStep(step){
+    ["review","shipping","payment","result"].forEach((name,i)=>{
+      document.getElementById(`view-${name}`).classList.toggle("active", i===step-1);
+      document.getElementById(`step-label-${i+1}`).classList.toggle("active", i===step-1);
+    });
+  }
+
+  document.getElementById("checkout-balance").textContent = "NPR " + getWalletBalance().toLocaleString();
+
+  let shippingDetails = null;
+
+  function goToPayment(){ setStep(2); }
+
+  document.getElementById("shipping-phone").addEventListener("input", (event)=>{
+    event.target.value = event.target.value.replace(/\D/g, "").slice(0, 10);
+  });
+
+  document.getElementById("shipping-form").addEventListener("submit", (event)=>{
+    event.preventDefault();
+    const name = document.getElementById("shipping-name").value.trim();
+    const phone = document.getElementById("shipping-phone").value.trim();
+    const address = document.getElementById("shipping-address").value.trim();
+    const city = document.getElementById("shipping-city").value.trim();
+    const checks = {
+      "err-shipping-name": name.length >= 2,
+      "err-shipping-phone": /^9\d{9}$/.test(phone),
+      "err-shipping-address": address.length >= 5,
+      "err-shipping-city": city.length >= 2,
+    };
+    Object.entries(checks).forEach(([id, valid])=>showError(id, !valid));
+    if(!Object.values(checks).every(Boolean)) return;
+    shippingDetails = { name, phone, address, city };
+    setStep(3);
+  });
+
+  // Live card preview
+  const walletInput = document.getElementById("pay-name");
+  const mpinInput = document.getElementById("pay-cvv");
+
+  walletInput.addEventListener("input", ()=>{
+    const digits = walletInput.value.replace(/\D/g, "").slice(0, 10);
+    walletInput.value = digits;
+    document.getElementById("preview-name").textContent = digits || "YOUR MOBILE";
+  });
+
+  mpinInput.addEventListener("input", ()=>{
+    mpinInput.value = mpinInput.value.replace(/\D/g, "").slice(0, 4);
+  });
+
+  function showError(id, show){
+    document.getElementById(id).classList.toggle("show", show);
+  }
+
+  function validatePaymentForm(){
+    let valid = true;
+    const walletId = walletInput.value.replace(/\D/g, "");
+    const mpin = mpinInput.value.trim();
+
+    const nameOk = /^9\d{9}$/.test(walletId);
+    showError("err-name", !nameOk); valid = valid && nameOk;
+
+    const cvvOk = /^\d{4}$/.test(mpin);
+    showError("err-cvv", !cvvOk); valid = valid && cvvOk;
+
+    return { valid, walletId };
+  }
+
+  document.getElementById("payment-form").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    const { valid, walletId } = validatePaymentForm();
+    if(!valid) return;
+
+    const btn = document.getElementById("pay-submit-btn");
+    const label = document.getElementById("pay-btn-label");
+    btn.disabled = true;
+    label.innerHTML = `<span class="spinner"></span> Connecting to eSewa…`;
+
+    // Simulate a network round-trip to a payment gateway.
+    setTimeout(()=>{
+      const declined = walletId === "9811111111";
+      btn.disabled = false;
+      label.textContent = "Pay with eSewa";
+      declined ? showFailure() : showSuccess();
+    }, 1100);
+  });
+
+  function showSuccess(){
+    const order = placeOrder(shippingDetails);
+    if(order && order.error){
+      showFailure(order.error);
+      return;
+    }
+    setStep(4);
+    document.getElementById("result-shell").innerHTML = `
+      <div class="result-icon ok">✓</div>
+      <h2>Payment approved</h2>
+      <p>Your payment was authorized and the order has been placed successfully.</p>
+      <div class="result-meta">
+        <div><span>Order ID</span><span>${order.id}</span></div>
+        <div><span>Amount charged</span><span>NPR ${order.total.toLocaleString()}</span></div>
+        <div><span>Deliver to</span><span>${order.shipping.name}</span></div>
+        <div><span>Phone</span><span>${order.shipping.phone}</span></div>
+        <div><span>Status</span><span>Approved</span></div>
+      </div>
+      <div class="result-actions">
+        <a href="dashboard.html" class="btn btn-primary">Go to dashboard</a>
+        <a href="shop.html" class="btn btn-ghost">Continue shopping</a>
+      </div>`;
+    renderCartDrawer();
+  }
+
+  function showFailure(message="The payment gateway rejected this transaction. Your wallet was not charged."){
+    setStep(4);
+    document.getElementById("result-shell").innerHTML = `
+      <div class="result-icon fail">✕</div>
+      <h2>Payment declined</h2>
+      <p>${message} Your cart has been kept so you can top up or try again.</p>
+      <div class="result-actions">
+        <button class="btn btn-primary" onclick="setStep(3)">Try again</button>
+        <a href="shop.html" class="btn btn-ghost">Back to shop</a>
+      </div>`;
+  }
+</script>
+</body>
+</html>

@@ -51,6 +51,11 @@
   .report-card{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:12px; }
   .report-card .rt{ font-weight:600; font-size:14.5px; }
   .report-card .rd{ font-size:12.5px; color:rgba(22,48,42,.6); margin-top:3px; }
+  .admin-wallet{ background:linear-gradient(135deg,var(--forest),#2d6048); color:#fff; border-radius:14px; padding:20px; margin-bottom:24px; }
+  .admin-wallet form{ display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:8px; margin-top:12px; }
+  .admin-wallet input{ min-width:0; border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:9px; background:rgba(255,255,255,.1); color:#fff; }
+  .admin-wallet input::placeholder{ color:rgba(255,255,255,.6); }
+  @media (max-width:700px){ .admin-wallet form{ grid-template-columns:1fr; } }
 
   @media (max-width:860px){
     .admin-shell{ grid-template-columns:1fr; }
@@ -98,6 +103,17 @@
 
     <!-- OVERVIEW -->
     <div class="admin-view active" id="view-overview">
+      <div class="admin-wallet">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--sage);text-transform:uppercase;letter-spacing:.08em;">GreenNest receiver wallet</div>
+        <div style="font-family:'Fraunces',serif;font-size:30px;margin-top:6px;" id="admin-wallet-balance">NPR 0</div>
+        <form id="admin-wallet-form">
+          <input id="admin-wallet-amount" type="number" min="100" max="50000" step="100" placeholder="Amount (NPR)" required>
+          <input id="admin-wallet-esewa" inputmode="numeric" maxlength="10" placeholder="eSewa mobile" required>
+          <input id="admin-wallet-mpin" type="password" inputmode="numeric" maxlength="4" placeholder="Demo MPIN" required>
+          <button class="btn btn-gold btn-sm" type="submit">Load with eSewa</button>
+        </form>
+        <div id="admin-wallet-message" style="font-size:12px;color:var(--sage);margin-top:8px;">Customer payments are credited here.</div>
+      </div>
       <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Recent activity</h2></div>
       <div class="table-wrap">
         <table class="data-table">
@@ -201,7 +217,16 @@
     document.getElementById("kpi-bookings").textContent = bookings.length;
     document.getElementById("kpi-orders").textContent = orders.length;
     document.getElementById("kpi-revenue").textContent = "NPR " + revenue.toLocaleString();
+    document.getElementById("admin-wallet-balance").textContent = "NPR " + getWalletBalance("admin").toLocaleString();
   }
+
+  document.getElementById("admin-wallet-form").addEventListener("submit", (event)=>{
+    event.preventDefault();
+    const result = topUpWallet(document.getElementById("admin-wallet-amount").value, document.getElementById("admin-wallet-esewa").value, document.getElementById("admin-wallet-mpin").value);
+    const message = document.getElementById("admin-wallet-message");
+    message.textContent = result.ok ? `Wallet loaded. New balance: NPR ${result.balance.toLocaleString()}.` : result.message;
+    if(result.ok){ event.target.reset(); renderKPIs(); }
+  });
 
   function renderActivity(){
     const orders = readLS(LS.orders, []).map(o=>({type:"Order", detail:`${o.id} · NPR ${o.total.toLocaleString()}`, date:o.date}));
