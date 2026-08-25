@@ -1,7 +1,7 @@
 # GreenNest — Smart Gardening E-Commerce & Plant Care Management System
 
 A working demo web app built from the GreenNest project proposal (Dipsan Silwal, Dept. of CSIT, Tribhuvan University).
-Plain HTML/CSS/JavaScript — no install, no build step, no server required.
+Plain HTML/CSS/JavaScript demo with an optional Node.js + MySQL API for shared persistent data.
 
 ## How to run it
 
@@ -12,10 +12,23 @@ Plain HTML/CSS/JavaScript — no install, no build step, no server required.
 
 State (cart, wishlist, plants, journal, orders, bookings) is saved in the browser's local storage, so it survives page reloads. Keep an internet connection open for Google Fonts and the live weather API on the Dashboard; the site still works offline, just with fallback system fonts and a "weather unavailable" message.
 
+## MySQL database API
+
+The original localStorage demo remains available, while `server.js` provides a MySQL-backed API for multi-device persistence.
+
+1. Install Node.js 18+ and MySQL 8+.
+2. Create the database and seed demo accounts: `mysql -u root -p < database.sql`.
+3. Copy `.env.example` to `.env` and set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD`.
+4. Install packages with `npm install`.
+5. Start the API and static site with `npm start`.
+6. Open `http://localhost:3000`.
+
+Available API routes include `GET /api/health`, `POST /api/auth/login`, `GET/POST/PATCH /api/products`, `POST /api/wallet/top-up`, and `POST /api/orders`. Protected routes use the authenticated user's numeric database id in the `x-user-id` header. The current pages still use localStorage until they are migrated to these endpoints, so existing demos do not break while the database layer is introduced.
+
 ## Pages
 
 | Page | Proposal module | What it does |
-|---|---|---|
+| --- | --- | --- |
 | `index.html` | Introduction / Overview | Landing page, problem statement, quick links |
 | `shop.html` | Customer — marketplace | Product and flower inventory, filter + search, cart, wishlist |
 | `quiz.html` | Smart Plant Recommendation | 5-question quiz, scores real products, adds to cart |
@@ -48,7 +61,7 @@ Everything is organized so a specific change lives in one obvious place:
 
 ## Honest scope notes
 
-This is a frontend-only demo: there's no real Node.js/SQL Server backend (the proposal's stated stack) — data lives in the browser via `localStorage` instead of a database, and the "weather API" and "notification service" are represented by one real live API call (Open-Meteo) plus in-app toast notifications. The Customer, Expert, and Admin modules from the proposal all have working screens here; wiring them to a shared real-time backend (so an Expert's "Accept" instantly updates the Customer's booking status on another device) is the natural next step and matches the proposal's own roadmap.
+The browser demo still uses localStorage for its existing screens. The optional MySQL API is now available for shared users, inventory, wallet balances, and orders; frontend migration to the API can happen route by route. Demo passwords in `database.sql` are intentionally simple and must be replaced with hashed authentication before production use.
 
 ## Tech used
 
@@ -56,7 +69,7 @@ HTML5, CSS3, vanilla JavaScript — matching the frontend layer named in the pro
 
 ## Folder structure
 
-```
+```text
 GreenNest/
 ├── index.html            Landing page
 ├── shop.html              Marketplace
@@ -71,5 +84,9 @@ GreenNest/
 ├── js/
 │   ├── data.js              Sample products, experts, companion/season data
 │   └── main.js               Shared cart / wishlist / journal / booking logic
+├── database.sql               MySQL schema and demo account seed
+├── server.js                  Express + MySQL API
+├── package.json               Node.js dependencies and scripts
+├── .env.example               Database configuration template
 └── README.md
 ```
