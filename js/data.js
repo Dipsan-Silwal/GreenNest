@@ -26,7 +26,20 @@ const PRODUCTS = [
   { id:21, name:"Grow Light (LED)", category:"Accessories", env:["Indoor"], light:"low", price:1200, stock:9, image:"https://images.unsplash.com/photo-1512428813834-c702c7702b78?auto=format&fit=crop&w=700&q=80", desc:"Full-spectrum LED for low-light rooms and winter growth." },
 ];
 
-const CATEGORIES = ["All","Plants","Seeds","Fertilizers","Pots","Gardening tools","Accessories"];
+const PRODUCT_STORAGE_KEY = "greennest_products";
+const savedProducts = (()=>{
+  try{
+    const saved = JSON.parse(localStorage.getItem(PRODUCT_STORAGE_KEY) || "null");
+    return Array.isArray(saved) && saved.length ? saved : null;
+  }catch(e){ return null; }
+})();
+if(savedProducts) PRODUCTS.splice(0, PRODUCTS.length, ...savedProducts);
+
+function saveProducts(){
+  try{ localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(PRODUCTS)); }catch(e){ /* storage unavailable */ }
+}
+
+const CATEGORIES = ["All","Plants","Flowers","Seeds","Fertilizers","Pots","Gardening tools","Accessories"];
 const ENVIRONMENTS = ["All","Indoor","Outdoor","Rooftop","Balcony","Landscaping"];
 
 const EXPERTS = [

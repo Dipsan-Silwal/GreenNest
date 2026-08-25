@@ -17,7 +17,7 @@ State (cart, wishlist, plants, journal, orders, bookings) is saved in the browse
 | Page | Proposal module | What it does |
 |---|---|---|
 | `index.html` | Introduction / Overview | Landing page, problem statement, quick links |
-| `shop.html` | Customer — marketplace | 21 products / 6 categories, filter + search, cart, wishlist |
+| `shop.html` | Customer — marketplace | Product and flower inventory, filter + search, cart, wishlist |
 | `quiz.html` | Smart Plant Recommendation | 5-question quiz, scores real products, adds to cart |
 | `companion.html` | Companion & Seasonal Recommendations | Compatibility checker + season-by-season plant picks |
 | `dashboard.html` | Customer — dashboard / journal | My Plants, growth timeline, **live weather-based reminders**, wishlist, orders, bookings |
@@ -34,14 +34,14 @@ State (cart, wishlist, plants, journal, orders, bookings) is saved in the browse
 - **Weather reminders** — calls the free [Open-Meteo](https://open-meteo.com) API live, using your browser's geolocation (falls back to Kathmandu), and generates watering/heat/rain alerts from the actual forecast
 - **Growth journal** — add plants, log care notes, see a visual timeline of activity
 - **Expert bookings** — a booking form writes into local storage; the **Expert Panel** reads the same data and lets you accept/reject it, so you can demo the full request → response loop
-- **Admin reports** — the Reports tab exports real CSV files (products, orders, bookings) generated from live app state
+- **Admin inventory** — add flowers, update stock, remove products, and export the live inventory as CSV; changes persist in the browser and appear in Shop
 
 ## How to customize / re-edit
 
 Everything is organized so a specific change lives in one obvious place:
 
 - **Colors & fonts** → `css/style.css`, section `1. DESIGN TOKENS` at the top. Change the CSS variables (`--forest`, `--moss`, `--gold`, etc.) and the whole site updates — no need to touch individual pages.
-- **Products, experts, companion data** → `js/data.js`. Add a new product by adding an object to the `PRODUCTS` array; same pattern for `EXPERTS`, `COMPANIONS`, `SEASON_PLANTS`.
+- **Products, experts, companion data** → `js/data.js`. Built-in products are defined in the `PRODUCTS` array; admins can add flowers and manage stock from `admin.html`, with inventory saved in browser local storage.
 - **Cart / wishlist / booking logic** → `js/main.js`. All shared behavior (add to cart, toggle wishlist, place order, book an expert) lives here so it's consistent across pages.
 - **Page-specific layout/behavior** → each `.html` file has its own `<style>` block (page-only CSS) and `<script>` block (page-only logic) near the bottom, clearly separated from the shared files.
 - **Responsive layout** → grids use `repeat(auto-fit, minmax(...))` instead of fixed column counts, so cards reflow naturally at any window width without needing extra breakpoints. If you add a new grid, follow the same pattern (see `.product-grid`, `.expert-grid`, etc. for examples).

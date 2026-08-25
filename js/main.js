@@ -164,11 +164,14 @@ function getCart(){ return readLS(userStorageKey(LS.cart), []); }
 function setCart(cart){ writeLS(userStorageKey(LS.cart), cart); updateBadges(); }
 function addToCart(productId, qty=1){
   const cart = getCart();
+  const product = PRODUCTS.find(x=>x.id===productId);
+  if(!product || product.stock <= 0){ toast("This product is out of stock"); return; }
   const existing = cart.find(i=>i.id===productId);
-  if(existing){ existing.qty += qty; } else { cart.push({ id:productId, qty }); }
+  const nextQty = (existing ? existing.qty : 0) + qty;
+  if(nextQty > product.stock){ toast(`Only ${product.stock} in stock`); return; }
+  if(existing){ existing.qty = nextQty; } else { cart.push({ id:productId, qty }); }
   setCart(cart);
-  const p = PRODUCTS.find(x=>x.id===productId);
-  toast(`${p ? p.name : "Item"} added to cart`);
+  toast(`${product.name} added to cart`);
 }
 function removeFromCart(productId){
   setCart(getCart().filter(i=>i.id!==productId));
@@ -177,7 +180,10 @@ function changeQty(productId, delta){
   const cart = getCart();
   const item = cart.find(i=>i.id===productId);
   if(!item) return;
-  item.qty += delta;
+  const product = PRODUCTS.find(x=>x.id===productId);
+  const nextQty = item.qty + delta;
+  if(product && nextQty > product.stock){ toast(`Only ${product.stock} in stock`); return; }
+  item.qty = nextQty;
   if(item.qty <= 0){ return removeFromCart(productId); }
   setCart(cart);
 }
@@ -224,6 +230,11 @@ function placeOrder(shippingDetails=null){
   }
   orders.unshift(order);
   writeLS(LS.orders, orders);
+  cart.forEach(item=>{
+    const product = PRODUCTS.find(x=>x.id===item.id);
+    if(product) product.stock = Math.max(0, product.stock - item.qty);
+  });
+  saveProducts();
   setCart([]);
   return order;
 }
