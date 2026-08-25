@@ -173,6 +173,28 @@ function getUserOrders(username=getSession()?.username){
   return readLS(LS.orders, []).filter(order=>order.customerUsername === username);
 }
 
+function companionKey(name){
+  return String(name || "").toLowerCase().replace(/\s*\(pack\)|\s+sapling\b/g, "").trim();
+}
+function getPurchaseRecommendations(order, limit=6){
+  const purchasedIds = new Set((order?.items || []).map(item=>Number(item.id)));
+  const purchasedKeys = new Set((order?.items || []).map(item=>{
+    const product = PRODUCTS.find(candidate=>candidate.id===Number(item.id));
+    return companionKey(product?.name);
+  }));
+  const companionKeys = new Set();
+  COMPANIONS.forEach(pair=>{
+    const pairKeys = pair.set.map(companionKey);
+    if(pairKeys.some(key=>purchasedKeys.has(key))) pairKeys.forEach(key=>{
+      if(!purchasedKeys.has(key)) companionKeys.add(key);
+    });
+  });
+  const available = PRODUCTS.filter(product=>product.stock>0 && !purchasedIds.has(product.id));
+  const companions = available.filter(product=>companionKeys.has(companionKey(product.name)));
+  const otherPlants = available.filter(product=>["Plants", "Flowers"].includes(product.category) && !companionKeys.has(companionKey(product.name)));
+  return [...companions, ...otherPlants].slice(0, limit);
+}
+
 /* ---------------- CART ---------------- */
 function getCart(){ return readLS(userStorageKey(LS.cart), []); }
 function setCart(cart){ writeLS(userStorageKey(LS.cart), cart); updateBadges(); }

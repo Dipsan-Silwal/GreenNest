@@ -37,6 +37,24 @@
   .pay-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .test-hint{ font-size:11.5px; color:rgba(22,48,42,.5); margin-top:14px; line-height:1.6; }
   .test-hint code{ background:var(--clay); padding:2px 6px; border-radius:5px; font-family:'Space Mono',monospace; }
+  .topup-box{ background:var(--clay); border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:18px; }
+  .topup-box h4{ font-size:14px; margin-bottom:4px; }
+  .topup-box p{ font-size:12px; color:rgba(22,48,42,.6); margin-bottom:10px; }
+  .topup-form{ display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:8px; }
+  .topup-form input{ min-width:0; border:1px solid var(--line); border-radius:8px; padding:9px; font:inherit; font-size:12px; }
+  .topup-message{ font-size:11.5px; color:var(--success); margin-top:8px; min-height:16px; }
+  .recommendations{ text-align:left; margin-top:28px; border-top:1px solid var(--line); padding-top:22px; }
+  .recommendations h3{ font-size:17px; margin-bottom:4px; }
+  .recommendations p{ font-size:12.5px; color:rgba(22,48,42,.6); margin-bottom:12px; }
+  .recommendation-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:10px; }
+  .recommendation-card{ border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff; }
+  .recommendation-card img{ width:100%; height:90px; object-fit:cover; display:block; }
+  .recommendation-card .rc-body{ padding:9px; }
+  .recommendation-card strong{ display:block; font-size:12.5px; }
+  .recommendation-card small{ display:block; color:var(--moss); font-size:10.5px; margin:3px 0 8px; }
+  .recommendation-card button{ width:100%; border:1px solid var(--forest); background:#fff; color:var(--forest); border-radius:7px; padding:6px; font-size:11px; }
+  @media (max-width:760px){ .topup-form{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:430px){ .topup-form{ grid-template-columns:1fr; } }
 
   .field-error{ font-size:11.5px; color:var(--danger); margin-top:4px; display:none; }
   .field-error.show{ display:block; }
@@ -166,6 +184,18 @@
             </button>
           </form>
 
+          <div class="topup-box">
+            <h4>Need more wallet balance?</h4>
+            <p>Load your customer wallet here, then use the updated balance above to pay.</p>
+            <form class="topup-form" id="checkout-topup-form">
+              <input id="checkout-topup-amount" type="number" min="100" max="50000" step="100" placeholder="Amount (NPR)" required>
+              <input id="checkout-topup-esewa" inputmode="numeric" maxlength="10" placeholder="eSewa mobile" required>
+              <input id="checkout-topup-mpin" type="password" inputmode="numeric" maxlength="4" placeholder="Demo MPIN" required>
+              <button class="btn btn-gold btn-sm" type="submit">Load wallet</button>
+            </form>
+            <div class="topup-message" id="checkout-topup-message"></div>
+          </div>
+
           <div class="test-hint">
             Demo eSewa ID — <code>9800000000</code> simulates an approved payment.
             <code>9811111111</code> simulates a declined payment. Use <code>1234</code> as the demo MPIN.
@@ -259,6 +289,22 @@
 
   function goToPayment(){ setStep(2); }
 
+  document.getElementById("checkout-topup-form").addEventListener("submit", (event)=>{
+    event.preventDefault();
+    const result = topUpWallet(
+      document.getElementById("checkout-topup-amount").value,
+      document.getElementById("checkout-topup-esewa").value,
+      document.getElementById("checkout-topup-mpin").value
+    );
+    const message = document.getElementById("checkout-topup-message");
+    message.textContent = result.ok ? `Wallet loaded. New balance: NPR ${result.balance.toLocaleString()}.` : result.message;
+    message.style.color = result.ok ? "var(--success)" : "var(--danger)";
+    if(result.ok){
+      document.getElementById("checkout-balance").textContent = "NPR " + result.balance.toLocaleString();
+      event.target.reset();
+    }
+  });
+
   document.getElementById("shipping-phone").addEventListener("input", (event)=>{
     event.target.value = event.target.value.replace(/\D/g, "").slice(0, 10);
   });
@@ -339,6 +385,17 @@
       return;
     }
     setStep(4);
+    const recommendations = getPurchaseRecommendations(order);
+    const recommendationMarkup = recommendations.length ? `
+      <div class="recommendations">
+        <h3>Good next plants for your garden</h3>
+        <p>Your best companion plants are shown first, followed by other plants you may like.</p>
+        <div class="recommendation-grid">${recommendations.map(product=>`
+          <div class="recommendation-card">
+            <img src="${product.image}" alt="${product.name}">
+            <div class="rc-body"><strong>${product.name}</strong><small>NPR ${product.price}</small><button onclick="addToCart(${product.id})">Add to cart</button></div>
+          </div>`).join("")}</div>
+      </div>` : "";
     document.getElementById("result-shell").innerHTML = `
       <div class="result-icon ok">✓</div>
       <h2>Payment approved</h2>
@@ -353,7 +410,7 @@
       <div class="result-actions">
         <a href="dashboard.html" class="btn btn-primary">Go to dashboard</a>
         <a href="shop.html" class="btn btn-ghost">Continue shopping</a>
-      </div>`;
+      </div>${recommendationMarkup}`;
     renderCartDrawer();
   }
 
