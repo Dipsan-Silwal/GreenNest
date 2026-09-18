@@ -55,16 +55,6 @@
   .admin-wallet form{ display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:8px; margin-top:12px; }
   .admin-wallet input{ min-width:0; border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:9px; background:rgba(255,255,255,.1); color:#fff; }
   .admin-wallet input::placeholder{ color:rgba(255,255,255,.6); }
-  .inventory-form{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:16px; }
-  .inventory-form h3{ font-size:16px; margin-bottom:4px; }
-  .inventory-form p{ font-size:12px; color:rgba(22,48,42,.58); margin-bottom:14px; }
-  .inventory-grid{ display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:10px; }
-  .inventory-form input, .inventory-form select{ width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; background:#fff; font:inherit; font-size:13px; }
-  .inventory-form .form-actions{ display:flex; align-items:center; gap:10px; margin-top:10px; }
-  .inventory-message{ font-size:12px; color:var(--success); }
-  .out-of-stock{ color:var(--danger); font-weight:600; }
-  @media (max-width:900px){ .inventory-grid{ grid-template-columns:1fr 1fr; } }
-  @media (max-width:520px){ .inventory-grid{ grid-template-columns:1fr; } }
   @media (max-width:700px){ .admin-wallet form{ grid-template-columns:1fr; } }
 
   @media (max-width:860px){
@@ -147,23 +137,6 @@
     <!-- PRODUCTS -->
     <div class="admin-view" id="view-products">
       <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Manage products &amp; categories</h2></div>
-      <form class="inventory-form" id="product-form">
-        <h3 id="product-form-title">Add a flower to inventory</h3>
-        <p id="product-form-help">New flowers are saved in this browser and appear in the customer shop immediately.</p>
-        <input id="product-id" type="hidden">
-        <div class="inventory-grid">
-          <input id="product-name" placeholder="Flower name" required>
-          <select id="product-category"><option value="Flowers">Flowers</option><option value="Plants">Plants</option><option value="Seeds">Seeds</option><option value="Fertilizers">Fertilizers</option><option value="Pots">Pots</option><option value="Accessories">Accessories</option></select>
-          <input id="product-price" type="number" min="1" step="1" placeholder="Price (NPR)" required>
-          <input id="product-stock" type="number" min="0" step="1" placeholder="Opening stock" required>
-        </div>
-        <div class="inventory-grid" style="margin-top:10px;">
-          <input id="product-env" placeholder="Environments, e.g. Outdoor, Balcony" required>
-          <input id="product-image" type="url" placeholder="Image URL (optional)">
-          <input id="product-desc" placeholder="Short description" required>
-        </div>
-        <div class="form-actions"><button class="btn btn-primary btn-sm" id="product-submit" type="submit">Add to inventory</button><button class="btn btn-sm" id="product-cancel" type="button" style="display:none;">Cancel</button><span class="inventory-message" id="product-message"></span></div>
-      </form>
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Environment</th><th></th></tr></thead>
@@ -285,93 +258,15 @@
   function renderProducts(){
     document.getElementById("products-body").innerHTML = PRODUCTS.map(p=>`
       <tr>
-        <td>${p.image ? `<img src="${p.image}" alt="" style="width:34px;height:34px;object-fit:cover;border-radius:8px;vertical-align:middle;margin-right:8px;">` : ""}${p.name}</td>
+        <td>${p.img} ${p.name}</td>
         <td>${p.category}</td>
         <td>NPR ${p.price}</td>
-        <td class="${p.stock<10 ? 'stock-low' : ''}"><span class="status-dot ${p.stock<10?'low':'ok'}"></span>${p.stock}${p.stock===0 ? ' (out)' : ''}</td>
+        <td class="${p.stock<10 ? 'stock-low' : ''}"><span class="status-dot ${p.stock<10?'low':'ok'}"></span>${p.stock}</td>
         <td>${p.env.join(", ")}</td>
-        <td><div class="row-actions"><button onclick="editProduct(${p.id})">Edit</button><button class="danger" onclick="removeProduct(${p.id})">Remove</button></div></td>
+        <td><div class="row-actions"><button onclick="toast('Edit form would open here')">Edit</button><button class="danger" onclick="toast('Product would be removed here')">Remove</button></div></td>
       </tr>
     `).join("");
   }
-
-  function editProduct(productId){
-    const product = PRODUCTS.find(p=>p.id===productId);
-    if(!product) return;
-    document.getElementById("product-id").value = product.id;
-    document.getElementById("product-name").value = product.name;
-    document.getElementById("product-category").value = product.category;
-    document.getElementById("product-price").value = product.price;
-    document.getElementById("product-stock").value = product.stock;
-    document.getElementById("product-env").value = product.env.join(", ");
-    document.getElementById("product-image").value = product.image || "";
-    document.getElementById("product-desc").value = product.desc || "";
-    document.getElementById("product-form-title").textContent = `Edit ${product.name}`;
-    document.getElementById("product-form-help").textContent = "Update the product details and save your changes to the shop inventory.";
-    document.getElementById("product-submit").textContent = "Save changes";
-    document.getElementById("product-cancel").style.display = "inline-flex";
-    document.getElementById("product-message").textContent = "";
-    document.getElementById("product-form").scrollIntoView({ behavior:"smooth", block:"center" });
-  }
-
-  function resetProductForm(){
-    const form = document.getElementById("product-form");
-    form.reset();
-    document.getElementById("product-id").value = "";
-    document.getElementById("product-form-title").textContent = "Add a flower to inventory";
-    document.getElementById("product-form-help").textContent = "New flowers are saved in this browser and appear in the customer shop immediately.";
-    document.getElementById("product-submit").textContent = "Add to inventory";
-    document.getElementById("product-cancel").style.display = "none";
-  }
-
-  function removeProduct(productId){
-    const product = PRODUCTS.find(p=>p.id===productId);
-    if(!product || !confirm(`Remove ${product.name} from the shop?`)) return;
-    PRODUCTS.splice(PRODUCTS.indexOf(product), 1);
-    saveProducts();
-    renderProducts();
-    renderKPIs();
-    toast(`${product.name} removed from inventory`);
-  }
-
-  document.getElementById("product-form").addEventListener("submit", (event)=>{
-    event.preventDefault();
-    const name = document.getElementById("product-name").value.trim();
-    const price = Number(document.getElementById("product-price").value);
-    const stock = Number(document.getElementById("product-stock").value);
-    const env = document.getElementById("product-env").value.split(",").map(value=>value.trim()).filter(Boolean);
-    if(!name || !Number.isFinite(price) || price <= 0 || !Number.isInteger(stock) || stock < 0 || env.length===0){
-      document.getElementById("product-message").textContent = "Enter a valid name, price, stock and environment.";
-      return;
-    }
-    const productId = Number(document.getElementById("product-id").value);
-    const productDetails = {
-      name,
-      category: document.getElementById("product-category").value,
-      env,
-      price,
-      stock,
-      image: document.getElementById("product-image").value.trim() || "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=700&q=80",
-      desc: document.getElementById("product-desc").value.trim() || "Freshly stocked flower for your garden."
-    };
-    if(productId){
-      const product = PRODUCTS.find(item=>item.id===productId);
-      if(product) Object.assign(product, productDetails);
-    }else{
-      PRODUCTS.push({
-        id: PRODUCTS.reduce((max, product)=>Math.max(max, Number(product.id)||0), 0) + 1,
-        light:"high",
-        ...productDetails
-      });
-    }
-    saveProducts();
-    resetProductForm();
-    document.getElementById("product-message").textContent = `${name} ${productId ? "updated" : "added to inventory"}.`;
-    renderProducts();
-    renderKPIs();
-  });
-
-  document.getElementById("product-cancel").addEventListener("click", resetProductForm);
 
   function renderExperts(){
     document.getElementById("experts-body").innerHTML = EXPERTS.map(e=>`

@@ -16,12 +16,8 @@ const LS = {
 
 const DEMO_USERS = {
   admin: { username: "admin", password: "admin", role: "admin", label: "Admin" },
-  customer: { username: "customer", password: "customer", role: "customer", label: "Aanya Sharma" },
-  meera: { username: "meera", password: "meera", role: "customer", label: "Meera Koirala" },
-  sujan: { username: "sujan", password: "sujan", role: "customer", label: "Sujan Bhandari" },
-  expert: { username: "expert", password: "expert", role: "expert", label: "Sabina Gurung" },
-  bikash: { username: "bikash", password: "bikash", role: "expert", label: "Bikash Thapa" },
-  anisha: { username: "anisha", password: "anisha", role: "expert", label: "Anisha Rai" },
+  customer: { username: "customer", password: "customer", role: "customer", label: "Customer" },
+  expert: { username: "expert", password: "expert", role: "expert", label: "Expert" },
 };
 
 function getSession(){ return readLS(LS.session, null); }
@@ -34,20 +30,13 @@ function getUserHome(role){
 }
 function loginDemoUser(username, role, password){
   const roleKey = String(role || "").trim().toLowerCase();
-  const user = Object.values(DEMO_USERS).find(account=>account.username === String(username || "").trim().toLowerCase());
+  const user = DEMO_USERS[roleKey];
   if(!user) return false;
-  if(user.role !== roleKey) return false;
+  if(String(username || "").trim().toLowerCase() !== user.username) return false;
   if(String(password || "") !== user.password) return false;
   const session = { username: user.username, role: user.role, label: user.label };
   setSession(session);
   return session;
-}
-function switchDemoAccount(username){
-  const account = DEMO_USERS[String(username || "").trim().toLowerCase()];
-  const current = getSession();
-  if(!account || !current || account.role !== current.role) return;
-  setSession({ username:account.username, role:account.role, label:account.label });
-  window.location.href = getUserHome(account.role);
 }
 function logoutUser(){
   clearSession();
@@ -59,11 +48,8 @@ function ensureAuthUI(){
   const session = getSession();
   const wrapper = document.createElement("div");
   wrapper.className = "auth-user";
-  const accounts = session && ["customer", "expert"].includes(session.role)
-    ? Object.values(DEMO_USERS).filter(account=>account.role===session.role)
-    : [];
   wrapper.innerHTML = `
-    ${accounts.length ? `<select class="account-switcher" aria-label="Switch account" title="Switch account" onchange="switchDemoAccount(this.value)">${accounts.map(account=>`<option value="${account.username}" ${account.username===session.username?'selected':''}>${account.label}</option>`).join("")}</select>` : `<span id="user-pill" class="user-pill">${session ? session.label : "Guest"}</span>`}
+    <span id="user-pill" class="user-pill">${session ? session.label : "Guest"}</span>
     <button id="logout-btn" class="logout-btn" type="button" onclick="logoutUser()">Logout</button>
   `;
   nav.appendChild(wrapper);
@@ -141,11 +127,15 @@ function getWalletBalance(username=getSession()?.username){ return Number(getWal
 function addWalletTransaction(wallet, transaction){
   wallet.transactions.unshift({ ...transaction, date: new Date().toISOString() });
 }
+function isValidEsewaCredentials(esewaId, mpin){
+  const walletId = String(esewaId || "").replace(/\D/g, "");
+  return /^\d{10}$/.test(walletId) && String(mpin || "") === walletId.slice(0, 4);
+}
 function topUpWallet(amount, esewaId, mpin){
   const value = Number(amount);
   const walletId = String(esewaId || "").replace(/\D/g, "");
   if(!getSession() || !Number.isFinite(value) || value < 100 || value > 50000) return { ok:false, message:"Enter an amount between NPR 100 and NPR 50,000." };
-  if(walletId !== "9800000000" || String(mpin || "") !== "1234") return { ok:false, message:"Top-up declined. Use the approved demo eSewa ID and MPIN." };
+  if(!isValidEsewaCredentials(walletId, mpin)) return { ok:false, message:"Top-up declined. Enter any 10-digit eSewa number and use its first 4 digits as the MPIN." };
   const wallets = getWallets();
   const wallet = wallets[getSession().username] || { balance:0, transactions:[] };
   wallet.balance += value;
@@ -173,41 +163,16 @@ function getUserOrders(username=getSession()?.username){
   return readLS(LS.orders, []).filter(order=>order.customerUsername === username);
 }
 
-function companionKey(name){
-  return String(name || "").toLowerCase().replace(/\s*\(pack\)|\s+sapling\b/g, "").trim();
-}
-function getPurchaseRecommendations(order, limit=6){
-  const purchasedIds = new Set((order?.items || []).map(item=>Number(item.id)));
-  const purchasedKeys = new Set((order?.items || []).map(item=>{
-    const product = PRODUCTS.find(candidate=>candidate.id===Number(item.id));
-    return companionKey(product?.name);
-  }));
-  const companionKeys = new Set();
-  COMPANIONS.forEach(pair=>{
-    const pairKeys = pair.set.map(companionKey);
-    if(pairKeys.some(key=>purchasedKeys.has(key))) pairKeys.forEach(key=>{
-      if(!purchasedKeys.has(key)) companionKeys.add(key);
-    });
-  });
-  const available = PRODUCTS.filter(product=>product.stock>0 && !purchasedIds.has(product.id));
-  const companions = available.filter(product=>companionKeys.has(companionKey(product.name)));
-  const otherPlants = available.filter(product=>["Plants", "Flowers"].includes(product.category) && !companionKeys.has(companionKey(product.name)));
-  return [...companions, ...otherPlants].slice(0, limit);
-}
-
 /* ---------------- CART ---------------- */
 function getCart(){ return readLS(userStorageKey(LS.cart), []); }
 function setCart(cart){ writeLS(userStorageKey(LS.cart), cart); updateBadges(); }
 function addToCart(productId, qty=1){
   const cart = getCart();
-  const product = PRODUCTS.find(x=>x.id===productId);
-  if(!product || product.stock <= 0){ toast("This product is out of stock"); return; }
   const existing = cart.find(i=>i.id===productId);
-  const nextQty = (existing ? existing.qty : 0) + qty;
-  if(nextQty > product.stock){ toast(`Only ${product.stock} in stock`); return; }
-  if(existing){ existing.qty = nextQty; } else { cart.push({ id:productId, qty }); }
+  if(existing){ existing.qty += qty; } else { cart.push({ id:productId, qty }); }
   setCart(cart);
-  toast(`${product.name} added to cart`);
+  const p = PRODUCTS.find(x=>x.id===productId);
+  toast(`${p ? p.name : "Item"} added to cart`);
 }
 function removeFromCart(productId){
   setCart(getCart().filter(i=>i.id!==productId));
@@ -216,10 +181,7 @@ function changeQty(productId, delta){
   const cart = getCart();
   const item = cart.find(i=>i.id===productId);
   if(!item) return;
-  const product = PRODUCTS.find(x=>x.id===productId);
-  const nextQty = item.qty + delta;
-  if(product && nextQty > product.stock){ toast(`Only ${product.stock} in stock`); return; }
-  item.qty = nextQty;
+  item.qty += delta;
   if(item.qty <= 0){ return removeFromCart(productId); }
   setCart(cart);
 }
@@ -266,11 +228,6 @@ function placeOrder(shippingDetails=null){
   }
   orders.unshift(order);
   writeLS(LS.orders, orders);
-  cart.forEach(item=>{
-    const product = PRODUCTS.find(x=>x.id===item.id);
-    if(product) product.stock = Math.max(0, product.stock - item.qty);
-  });
-  saveProducts();
   setCart([]);
   return order;
 }
@@ -320,6 +277,41 @@ function updateBookingStatus(bookingId, status){
   const b = bookings.find(x=>x.id===bookingId);
   if(b) b.status = status;
   writeLS(LS.bookings, bookings);
+}
+async function emailBookingRequest(booking){
+  const apiBase = ["5500", "5501"].includes(window.location.port) ? "http://localhost:3000" : "";
+  const response = await fetch(`${apiBase}/api/bookings/email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(booking),
+  });
+  const result = await response.json().catch(() => ({}));
+  if(!response.ok) throw new Error(result.error || "Unable to send booking email.");
+  return result;
+}
+
+async function emailOrderConfirmation(order){
+  const emailOrder = {
+    ...order,
+    items: Array.isArray(order.items) ? order.items.map(item => {
+      const product = PRODUCTS.find(candidate => candidate.id === item.id);
+      return {
+        ...item,
+        name: product?.name || `Product ${item.id}`,
+        price: product?.price || 0,
+        image: product?.image || "",
+      };
+    }) : order.items,
+  };
+  const apiBase = ["5500", "5501"].includes(window.location.port) ? "http://localhost:3000" : "";
+  const response = await fetch(`${apiBase}/api/orders/email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(emailOrder),
+  });
+  const result = await response.json().catch(() => ({}));
+  if(!response.ok) throw new Error(result.error || "Unable to send order email.");
+  return result;
 }
 
 /* ---------------- CSV EXPORT (used by Admin > Generate Reports) ---------------- */

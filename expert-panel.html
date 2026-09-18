@@ -52,7 +52,6 @@
   <nav class="wrap">
     <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#D9A448"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#16302A"/></svg>GreenNest <span style="font-weight:400; opacity:.6; font-size:13px;">/ Expert Panel</span></a>
     <div class="who">
-      <select id="expert-account-switcher" aria-label="Switch expert account" title="Switch expert account"></select>
       <select id="expert-selector"></select>
       <a href="index.html" class="back-link">← Exit to customer site</a>
     </div>
@@ -92,18 +91,9 @@
 <script src="js/data.js"></script>
 <script src="js/main.js"></script>
 <script>
-  const accountSel = document.getElementById("expert-account-switcher");
-  const expertAccounts = Object.values(DEMO_USERS).filter(account=>account.role==="expert");
-  accountSel.innerHTML = expertAccounts.map(account=>`<option value="${account.username}">${account.label}</option>`).join("");
-  const session = getSession();
-  if(session) accountSel.value = session.username;
-  accountSel.addEventListener("change", ()=>switchDemoAccount(accountSel.value));
-
   const sel = document.getElementById("expert-selector");
   sel.innerHTML = EXPERTS.map(e=>`<option value="${e.id}">${e.name} — ${e.specialty}</option>`).join("");
-  const accountProfileIds = { expert:1, bikash:2, anisha:3 };
-  let currentExpertId = accountProfileIds[session?.username] || EXPERTS[0].id;
-  sel.value = currentExpertId;
+  let currentExpertId = EXPERTS[0].id;
   sel.addEventListener("change", ()=>{ currentExpertId = Number(sel.value); renderAll(); });
 
   function myBookings(){

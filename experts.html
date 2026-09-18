@@ -83,6 +83,7 @@
     <p style="font-size:13px; color:rgba(22,48,42,.6);" id="book-sub"></p>
     <form id="book-form">
       <input type="hidden" id="book-expert-id">
+      <div class="field"><label for="book-email">Your email address</label><input type="email" id="book-email" placeholder="you@example.com" required></div>
       <div class="field"><label>Preferred date</label><input type="date" id="book-date" required></div>
       <div class="field"><label>Preferred time</label>
         <select id="book-time">
@@ -140,19 +141,30 @@
     openModal("book-modal");
   }
 
-  document.getElementById("book-form").addEventListener("submit", (ev)=>{
+  document.getElementById("book-form").addEventListener("submit", async (ev)=>{
     ev.preventDefault();
     const expertId = Number(document.getElementById("book-expert-id").value);
     const e = EXPERTS.find(x=>x.id===expertId);
+    const customerEmail = document.getElementById("book-email").value.trim();
     const date = document.getElementById("book-date").value;
     const time = document.getElementById("book-time").value;
     const note = document.getElementById("book-note").value;
+    if(!customerEmail){ toast("Please enter your email address"); return; }
     if(!date){ toast("Please choose a date"); return; }
-    addBooking({ expertId, expertName: e.name, specialty: e.specialty, date: `${date} · ${time}`, note });
+    const booking = addBooking({ expertId, expertName: e.name, specialty: e.specialty, price: e.price, customerEmail, customerName: getSession()?.label || "Guest", date: `${date} · ${time}`, note });
+    const submitButton = ev.submitter;
+    submitButton.disabled = true;
+    try{
+      await emailBookingRequest(booking);
+      toast(`Confirmation sent to ${customerEmail}`);
+    }catch(error){
+      toast(`Booking saved, but email failed: ${error.message}`);
+    }finally{
+      submitButton.disabled = false;
+    }
     ev.target.reset();
     closeModal("book-modal");
     renderMyBookings();
-    toast(`Booking request sent to ${e.name}`);
   });
 
   function renderMyBookings(){
