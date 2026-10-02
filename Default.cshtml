@@ -1,0 +1,21 @@
+@* Use anywhere:  @await Component.InvokeAsync("RecommendedProducts", new { take = 4 }) *@
+@model List<Product>
+@if (Model.Any())
+{
+    <section aria-labelledby="rec-title" class="my-4">
+        <h2 id="rec-title" class="h4">Recommended for you</h2>
+        <div class="row">
+            @foreach (var p in Model)
+            {
+                <div class="col-6 col-md-3 mb-3">
+                    <a asp-controller="Products" asp-action="Details" asp-route-id="@p.Id"
+                       data-track="recommendation_click" data-label="@p.Name" class="text-decoration-none">
+                        <img src="@p.ImageUrl" alt="@p.Name" class="img-fluid" loading="lazy" />
+                        <div>@p.Name</div>
+                        <small>Rs. @p.Price</small>
+                    </a>
+                </div>
+            }
+        </div>
+    </section>
+}
