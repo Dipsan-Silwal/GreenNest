@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout — GreenNest</title>
+<meta name="description" content="Review your GreenNest order and complete the demo checkout for plants and gardening supplies in Nepal.">
+<meta name="keywords" content="GreenNest checkout, plant order Nepal, gardening supplies">
+<meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -49,6 +52,10 @@
   .result-shell p{ color:rgba(22,48,42,.62); font-size:14px; max-width:380px; margin:0 auto; }
   .result-meta{ margin-top:22px; display:inline-block; text-align:left; background:var(--clay); border-radius:12px; padding:16px 20px; font-size:13px; }
   .result-meta div{ display:flex; justify-content:space-between; gap:30px; padding:4px 0; }
+  .order-fingerprint{ margin:18px auto 0; max-width:600px; padding:14px 16px; border:1px solid var(--line); border-radius:12px; text-align:left; }
+  .order-fingerprint strong{ display:block; font-size:13px; }
+  .order-fingerprint code{ display:block; margin-top:8px; overflow-wrap:anywhere; font-size:11px; color:var(--forest); }
+  .order-fingerprint small{ display:block; margin-top:8px; color:rgba(22,48,42,.65); line-height:1.5; }
   .result-actions{ margin-top:26px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
 
   .spinner{ width:18px; height:18px; border-radius:50%; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff; animation:spin .7s linear infinite; display:inline-block; }
@@ -78,7 +85,7 @@
 
 <section class="page-hero">
   <div class="wrap">
-    <div class="eyebrow on-dark">Secure Checkout</div>
+    <div class="eyebrow on-dark">Demo Checkout</div>
     <h1>Complete your order</h1>
     <p>Review your cart, then confirm payment through our simulated payment gateway.</p>
   </div>
@@ -214,6 +221,7 @@
 
 <div id="toast-holder"></div>
 
+<script src="js/tracking-config.js"></script>
 <script src="js/data.js"></script>
 <script src="js/main.js"></script>
 <script>
@@ -262,6 +270,11 @@
   let shippingDetails = null;
 
   function goToPayment(){ setStep(2); }
+  gnTrack("begin_checkout", {
+    currency:"NPR",
+    value:cartTotal(),
+    items:gnProductItems(getCart()),
+  });
 
   document.getElementById("shipping-phone").addEventListener("input", (event)=>{
     event.target.value = event.target.value.replace(/\D/g, "").slice(0, 10);
@@ -284,6 +297,7 @@
     Object.entries(checks).forEach(([id, valid])=>showError(id, !valid));
     if(!Object.values(checks).every(Boolean)) return;
     shippingDetails = { name, phone, address, city, email };
+    gnTrack("add_shipping_info", { currency:"NPR", value:cartTotal(), items:gnProductItems(getCart()) });
     setStep(3);
   });
 
@@ -323,6 +337,7 @@
     ev.preventDefault();
     const { valid, walletId } = validatePaymentForm();
     if(!valid) return;
+    gnTrack("add_payment_info", { currency:"NPR", value:cartTotal(), payment_type:"eSewa", items:gnProductItems(getCart()) });
 
     const btn = document.getElementById("pay-submit-btn");
     const label = document.getElementById("pay-btn-label");
@@ -337,6 +352,22 @@
     }, 1100);
   });
 
+  async function createOrderFingerprint(order){
+    if(!window.crypto?.subtle || !window.TextEncoder){
+      throw new Error("SHA-256 is unavailable in this browser context. Open GreenNest on localhost or HTTPS.");
+    }
+    const payload = {
+      orderId:order.id,
+      currency:"NPR",
+      total:order.total,
+      date:order.date,
+      items:order.items.map(item=>({ productId:item.id, quantity:item.qty })),
+    };
+    const encoded = new TextEncoder().encode(JSON.stringify(payload));
+    const digest = await window.crypto.subtle.digest("SHA-256", encoded);
+    return Array.from(new Uint8Array(digest), byte=>byte.toString(16).padStart(2, "0")).join("");
+  }
+
   function showSuccess(){
     const order = placeOrder(shippingDetails);
     if(order && order.error){
@@ -346,19 +377,30 @@
     setStep(4);
     document.getElementById("result-shell").innerHTML = `
       <div class="result-icon ok">✓</div>
-      <h2>Payment approved</h2>
-      <p>Your payment was authorized and the order has been placed successfully.</p>
+      <h2>Demo payment approved</h2>
+      <p>The simulated payment was approved and your demo order was placed. No real eSewa transaction occurred.</p>
       <div class="result-meta">
         <div><span>Order ID</span><span>${order.id}</span></div>
-        <div><span>Amount charged</span><span>NPR ${order.total.toLocaleString()}</span></div>
+        <div><span>Demo total</span><span>NPR ${order.total.toLocaleString()}</span></div>
         <div><span>Deliver to</span><span>${order.shipping.name}</span></div>
         <div><span>Phone</span><span>${order.shipping.phone}</span></div>
-        <div><span>Status</span><span>Approved</span></div>
+        <div><span>Status</span><span>Demo approved</span></div>
+      </div>
+      <div class="order-fingerprint" aria-live="polite">
+        <strong>Order fingerprint (SHA-256)</strong>
+        <code id="order-fingerprint-value">Generating fingerprint…</code>
+        <small>This client-generated hash summarizes the order ID, total, date, and purchased item IDs and quantities. It is for demonstration only; it does not encrypt data, authenticate the payment, or make this simulated checkout secure.</small>
       </div>
       <div class="result-actions">
         <a href="dashboard.html" class="btn btn-primary">Go to dashboard</a>
         <a href="shop.html" class="btn btn-ghost">Continue shopping</a>
       </div>`;
+    createOrderFingerprint(order)
+      .then(fingerprint=>{ document.getElementById("order-fingerprint-value").textContent = fingerprint; })
+      .catch(error=>{
+        console.error("Unable to generate the demo order fingerprint.", error);
+        document.getElementById("order-fingerprint-value").textContent = error.message || "Fingerprint generation failed.";
+      });
     renderCartDrawer();
     emailOrderConfirmation(order)
       .then(()=>toast(`Confirmation email sent to ${order.shipping.email}.`))

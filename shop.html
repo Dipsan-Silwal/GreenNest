@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shop — GreenNest</title>
+<meta name="description" content="Shop plants, seeds, fertilizers, pots and gardening tools at GreenNest Nepal. Browse indoor, outdoor, rooftop and balcony garden products.">
+<meta name="keywords" content="shop plants Nepal, buy seeds Nepal, gardening tools Kathmandu, indoor plants, fertilizers, pots, GreenNest shop">
+<meta property="og:title" content="Shop Plants &amp; Gardening Supplies — GreenNest">
+<meta property="og:description" content="Browse plants, seeds, pots, fertilizers and garden tools for every space.">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -39,6 +44,28 @@
   .add-btn{ width:100%; margin-top:10px; padding:11px 12px; border-radius:12px; border:1px solid var(--forest); background:linear-gradient(180deg, var(--forest), #214837); color:#fff; font-size:13px; font-weight:600; }
   .add-btn:hover{ background:linear-gradient(180deg, var(--moss), #3e6a4d); border-color:var(--moss); }
   .no-results{ grid-column:1/-1; text-align:center; padding:60px 0; color:rgba(22,48,42,.5); }
+  .recommendations{ margin:0 0 28px; }
+  .recommendations h2{ font-family:'Fraunces',serif; font-size:24px; margin-bottom:6px; }
+  .recommendations p{ color:rgba(22,48,42,.62); font-size:13px; margin-bottom:16px; }
+  .recommendation-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; }
+  .recommendation-card{ background:#fff; border:1px solid var(--line); border-radius:16px; padding:12px; }
+  .recommendation-card img{ width:100%; height:120px; object-fit:cover; border-radius:10px; }
+  .recommendation-card h3{ font-size:15px; margin:10px 0 4px; }
+  .recommendation-card .rec-price{ font-weight:700; color:var(--forest); margin-bottom:8px; }
+  #greennest-ad{ margin:20px 0; }
+  .marketing-demo{ margin:0 0 24px; padding:18px; border:1px solid var(--line); border-radius:18px; background:#fff; }
+  .marketing-demo h2{ font:600 20px 'Fraunces',serif; margin-bottom:6px; }
+  .marketing-demo-intro{ font-size:12px; color:rgba(22,48,42,.68); margin-bottom:12px; }
+  .marketing-demo-tools{ display:grid; gap:8px; }
+  .marketing-tool{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 12px; background:var(--paper); border-radius:10px; }
+  .marketing-tool strong,.marketing-tool code{ display:block; }
+  .marketing-tool strong{ font-size:13px; }
+  .marketing-tool code{ margin-top:3px; font-size:11px; overflow-wrap:anywhere; }
+  .marketing-status{ flex-shrink:0; font-size:11px; font-weight:700; color:var(--moss); }
+  .marketing-demo-events{ margin:10px 0 0; padding-left:20px; font-size:12px; }
+  .marketing-demo-events li{ padding:3px 0; }
+  .marketing-demo-events time{ margin-left:10px; color:rgba(22,48,42,.55); }
+  .demo-ad{ margin-top:14px; padding:12px; border:1px dashed rgba(22,48,42,.3); border-radius:10px; color:rgba(22,48,42,.62); font-size:12px; }
   @media (max-width:820px){
     .shop-layout{ grid-template-columns:1fr; }
   }
@@ -89,6 +116,20 @@
       </aside>
       <div>
         <div class="result-count" id="result-count"></div>
+        <section class="marketing-demo" id="marketing-demo-panel" aria-labelledby="marketing-demo-title">
+          <h2 id="marketing-demo-title">Digital marketing tools — demo</h2>
+          <p class="marketing-demo-intro">Example IDs below are deliberately fake. Events are shown locally in this browser and are not sent to Google or Meta unless you add your own real IDs in <code>js/tracking-config.js</code>.</p>
+          <div class="marketing-demo-tools" id="marketing-demo-tools"></div>
+          <h3 style="font-size:14px; margin:14px 0 4px;">Recent demo events</h3>
+          <ul class="marketing-demo-events" id="marketing-demo-events" aria-live="polite"></ul>
+          <div class="demo-ad"><strong>Demo AdSense placement</strong> — sample placeholder only; no ad is served and no ad impression is reported.</div>
+        </section>
+        <section class="recommendations" id="recommendations" aria-labelledby="recommendations-title" hidden>
+          <h2 id="recommendations-title">Picked for your garden</h2>
+          <p id="recommendations-copy"></p>
+          <div class="recommendation-grid" id="recommendation-grid"></div>
+        </section>
+        <div id="greennest-ad" hidden aria-label="Advertisement"></div>
         <div class="product-grid" id="product-grid"></div>
       </div>
     </div>
@@ -116,6 +157,7 @@
 
 <div id="toast-holder"></div>
 
+<script src="js/tracking-config.js"></script>
 <script src="js/data.js"></script>
 <script src="js/main.js"></script>
 <script>
@@ -153,9 +195,9 @@
       return;
     }
     grid.innerHTML = items.map(p=>`
-      <div class="p-card">
+      <div class="p-card" data-product-id="${p.id}" data-list-name="Shop">
         <div class="p-img">
-          <img src="${p.image}" alt="${p.name}" style="width:100%; height:100%; object-fit:cover;" />
+          <img src="${p.image}" alt="${p.name} — ${p.category} available at GreenNest" style="width:100%; height:100%; object-fit:cover;" />
           <button class="wl-heart ${isWishlisted(p.id)?'active':''}" onclick="toggleWishlist(${p.id}); this.classList.toggle('active');">♥</button>
         </div>
         <div class="p-body">
@@ -170,6 +212,27 @@
         </div>
       </div>
     `).join("");
+    gnTrackProductImpressions(grid);
+  }
+
+  function renderRecommendations(){
+    const recommendations = getRecommendedProducts(4);
+    const section = document.getElementById("recommendations");
+    const grid = document.getElementById("recommendation-grid");
+    if(!recommendations.length) return;
+    section.hidden = false;
+    document.getElementById("recommendations-copy").textContent = getUserOrders().length
+      ? "Suggestions use your order history and patterns in purchases from this demo browser."
+      : "Starter picks from the GreenNest catalog. Suggestions will personalize after your first order.";
+    grid.innerHTML = recommendations.map(p=>`
+      <article class="recommendation-card" data-product-id="${p.id}" data-list-name="Purchase recommendations">
+        <img src="${p.image}" alt="${p.name} — recommended ${p.category} from GreenNest" loading="lazy">
+        <h3>${p.name}</h3>
+        <div class="rec-price">NPR ${p.price}</div>
+        <button class="add-btn" data-track="recommendation_click" data-label="${p.name}" onclick="addToCart(${p.id})">Add to cart</button>
+      </article>
+    `).join("");
+    gnTrackProductImpressions(grid);
   }
 
   document.getElementById("search-input").addEventListener("input", (e)=>{
@@ -179,6 +242,7 @@
 
   renderFilters();
   renderGrid();
+  renderRecommendations();
 </script>
 </body>
 </html>
