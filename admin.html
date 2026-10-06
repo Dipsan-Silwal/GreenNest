@@ -54,11 +54,17 @@
   .report-card .rt{ font-weight:600; font-size:14.5px; }
   .report-card .rd{ font-size:12.5px; color:rgba(22,48,42,.6); margin-top:3px; }
   .admin-wallet{ background:linear-gradient(135deg,var(--forest),#2d6048); color:#fff; border-radius:14px; padding:20px; margin-bottom:24px; }
-  .admin-wallet form{ display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:8px; margin-top:12px; }
-  .admin-wallet input{ min-width:0; border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:9px; background:rgba(255,255,255,.1); color:#fff; }
-  .admin-wallet input::placeholder{ color:rgba(255,255,255,.6); }
-  @media (max-width:700px){ .admin-wallet form{ grid-template-columns:1fr; } }
   .payment-disclaimer{font-size:12px;color:rgba(22,48,42,.6);margin:-18px 0 24px;}
+  .admin-editor{ width:min(560px,calc(100% - 28px)); max-width:none; max-height:90vh; padding:0; border:0; border-radius:18px; box-shadow:0 24px 80px rgba(0,0,0,.3); }
+  .admin-editor::backdrop{ background:rgba(12,25,20,.55); }
+  .admin-editor form{ padding:24px; }
+  .admin-editor h2{ margin-bottom:18px; font:600 24px 'Fraunces',serif; }
+  .editor-fields{ display:grid; gap:12px; }
+  .editor-field{ display:grid; gap:5px; font-size:13px; font-weight:600; }
+  .editor-field input,.editor-field select,.editor-field textarea{ width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; font:400 14px 'Work Sans',sans-serif; }
+  .editor-field textarea{ min-height:90px; resize:vertical; }
+  .editor-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:20px; }
+  .editor-message{ min-height:18px; margin-top:8px; color:var(--danger); font-size:12px; }
 
   @media (max-width:860px){
     .admin-shell{ grid-template-columns:1fr; }
@@ -73,7 +79,7 @@
 
 <div class="admin-shell">
   <aside class="admin-side">
-    <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none" width="24" height="24"><circle cx="12" cy="12" r="12"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z"/></svg></a>
+    <a href="admin.html" class="brand" aria-label="Admin overview"><svg viewBox="0 0 24 24" fill="none" width="24" height="24"><circle cx="12" cy="12" r="12"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z"/></svg></a>
     <a class="side-link active" data-view="overview" onclick="setAdminTab('overview')">📊 Overview</a>
     <a class="side-link" data-view="customers" onclick="setAdminTab('customers')">👥 Customers</a>
     <a class="side-link" data-view="products" onclick="setAdminTab('products')">🌱 Products</a>
@@ -83,7 +89,7 @@
     <a class="side-link" data-view="payments" onclick="setAdminTab('payments')">💰 Payments</a>
     <a class="side-link" data-view="reports" onclick="setAdminTab('reports')">📄 Reports</a>
     <div class="side-foot">
-      <a href="index.html">← Exit to customer site</a>
+      <a href="#" onclick="logoutUser(); return false;">Log out</a>
     </div>
   </aside>
 
@@ -103,22 +109,15 @@
       <div class="kpi"><div class="n" id="kpi-bookings">0</div><div class="l">Total bookings</div></div>
       <div class="kpi"><div class="n" id="kpi-orders">0</div><div class="l">Orders placed</div></div>
       <div class="kpi"><div class="n" id="kpi-revenue">NPR 0</div><div class="l">Total order value</div></div>
-      <div class="kpi"><div class="n" id="kpi-received">NPR 0</div><div class="l">Wallet payments received · simulated</div></div>
+      <div class="kpi"><div class="n" id="kpi-received">NPR 0</div><div class="l">Payments recorded · local prototype</div></div>
     </div>
 
     <!-- OVERVIEW -->
     <div class="admin-view active" id="view-overview">
       <div class="admin-wallet">
-        <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--sage);text-transform:uppercase;letter-spacing:.08em;">GreenNest receiver wallet</div>
+        <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--sage);text-transform:uppercase;letter-spacing:.08em;">GreenNest simulated wallet balance</div>
         <div style="font-family:'Fraunces',serif;font-size:30px;margin-top:6px;" id="admin-wallet-balance">NPR 0</div>
-        <form id="admin-wallet-form">
-          <input id="admin-wallet-amount" type="number" min="100" max="50000" step="100" placeholder="Amount (NPR)" required>
-          <input id="admin-wallet-esewa" inputmode="numeric" maxlength="10" placeholder="eSewa mobile" required>
-          <input id="admin-wallet-mpin" type="password" inputmode="numeric" maxlength="4" placeholder="eSewa simulation MPIN" required>
-          <button class="btn btn-gold btn-sm" type="submit">Load with eSewa</button>
-        </form>
-        <div id="admin-wallet-message" style="font-size:12px;color:var(--sage);margin-top:8px;">GreenNest wallet payments are credited here.</div>
-        <div style="font-size:11px;color:var(--sage);margin-top:6px;">Local simulation only; no external money or eSewa transaction is processed.</div>
+        <div style="font-size:12px;color:var(--sage);margin-top:8px;">Updated by simulated customer wallet receipts. No real funds or eSewa transactions are processed.</div>
       </div>
       <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Recent activity</h2></div>
       <div class="table-wrap">
@@ -142,7 +141,7 @@
 
     <!-- PRODUCTS -->
     <div class="admin-view" id="view-products">
-      <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Manage products &amp; categories</h2></div>
+      <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Manage product details, prices &amp; stock</h2></div>
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Environment</th><th></th></tr></thead>
@@ -178,7 +177,7 @@
       <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Manage orders</h2></div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Order ID</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th></tr></thead>
+          <thead><tr><th>Order ID</th><th>Items</th><th>Total</th><th>Payment</th><th>Delivery status</th><th>Date</th><th>Actions</th></tr></thead>
           <tbody id="orders-body"></tbody>
         </table>
       </div>
@@ -186,7 +185,7 @@
 
     <div class="admin-view" id="view-payments">
       <div class="section-head" style="margin-bottom:8px;"><h2 style="font-size:19px;">Payment history</h2></div>
-      <p class="payment-disclaimer">Simulated GreenNest wallet receipts on this browser only. Cash-on-delivery orders remain due until collected; simulated card orders are not recorded as received.</p>
+      <p class="payment-disclaimer">Local prototype records only. Wallet payments are simulated; cash is recorded after an admin confirms collection on a delivered order. Simulated card orders are not recorded as received.</p>
       <div class="table-wrap">
         <table class="data-table">
           <thead><tr><th>Date</th><th>Paid by</th><th>Payment</th><th>Reference</th><th>Method</th><th>Total</th><th>Expert 80%</th><th>GreenNest 20%</th><th>Status</th></tr></thead>
@@ -219,6 +218,17 @@
 </div>
 
 <div id="toast-holder"></div>
+<dialog class="admin-editor" id="catalog-editor" aria-labelledby="catalog-editor-title">
+  <form id="catalog-editor-form" onsubmit="saveCatalogEdit(event)">
+    <h2 id="catalog-editor-title">Edit details</h2>
+    <div class="editor-fields" id="catalog-editor-fields"></div>
+    <div class="editor-message" id="catalog-editor-message" role="alert"></div>
+    <div class="editor-actions">
+      <button class="btn btn-ghost-dark btn-sm" type="button" onclick="document.getElementById('catalog-editor').close()">Cancel</button>
+      <button class="btn btn-primary btn-sm" type="submit">Save changes</button>
+    </div>
+  </form>
+</dialog>
 
 <script src="js/tracking-config.js"></script>
 <script src="js/data.js"></script>
@@ -243,14 +253,6 @@
     document.getElementById("kpi-received").textContent = "NPR " + received.toLocaleString();
     document.getElementById("admin-wallet-balance").textContent = "NPR " + getWalletBalance("admin").toLocaleString();
   }
-
-  document.getElementById("admin-wallet-form").addEventListener("submit", (event)=>{
-    event.preventDefault();
-    const result = topUpWallet(document.getElementById("admin-wallet-amount").value, document.getElementById("admin-wallet-esewa").value, document.getElementById("admin-wallet-mpin").value);
-    const message = document.getElementById("admin-wallet-message");
-    message.textContent = result.ok ? `Wallet loaded. New balance: NPR ${result.balance.toLocaleString()}.` : result.message;
-    if(result.ok){ event.target.reset(); renderKPIs(); }
-  });
 
   function renderActivity(){
     const orders = readLS(LS.orders, []).map(o=>({type:"Order", detail:`${o.id} · NPR ${o.total.toLocaleString()}`, date:o.date}));
@@ -283,12 +285,12 @@
   function renderProducts(){
     document.getElementById("products-body").innerHTML = PRODUCTS.map(p=>`
       <tr>
-        <td>${p.img} ${p.name}</td>
+        <td><img src="${p.image}" alt="" loading="lazy" style="width:30px;height:30px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:6px;">${p.name}</td>
         <td>${p.category}</td>
         <td>NPR ${p.price}</td>
         <td class="${p.stock<10 ? 'stock-low' : ''}"><span class="status-dot ${p.stock<10?'low':'ok'}"></span>${p.stock}</td>
         <td>${p.env.join(", ")}</td>
-        <td><div class="row-actions"><button onclick="toast('Edit form would open here')">Edit</button><button class="danger" onclick="toast('Product would be removed here')">Remove</button></div></td>
+        <td><div class="row-actions"><button onclick="openCatalogEditor('product',${p.id})">Edit</button></div></td>
       </tr>
     `).join("");
   }
@@ -300,9 +302,115 @@
         <td>${e.specialty}</td>
         <td>★ ${e.rating.toFixed(1)}</td>
         <td>${e.price}</td>
-        <td><div class="row-actions"><button onclick="toast('Edit form would open here')">Edit</button><button class="danger" onclick="toast('Expert would be removed here')">Remove</button></div></td>
+        <td><div class="row-actions"><button onclick="openCatalogEditor('expert',${e.id})">Edit</button></div></td>
       </tr>
     `).join("");
+  }
+
+  function escapeEditorValue(value){
+    return String(value).replace(/[&<>"']/g, character=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;",
+    })[character]);
+  }
+
+  function openCatalogEditor(type,id){
+    const isProduct=type==="product";
+    const record=(isProduct ? PRODUCTS : EXPERTS).find(item=>item.id===id);
+    if(!record){toast("This item could not be found.");return;}
+    const form=document.getElementById("catalog-editor-form");
+    const title=document.getElementById("catalog-editor-title");
+    const fields=document.getElementById("catalog-editor-fields");
+    const message=document.getElementById("catalog-editor-message");
+    form.dataset.recordType=type;
+    form.dataset.recordId=String(id);
+    message.textContent="";
+    title.textContent=isProduct ? "Edit product" : "Edit expert";
+    if(isProduct){
+      const categoryOptions=CATEGORIES.filter(category=>category!=="All").map(category=>
+        `<option value="${escapeEditorValue(category)}" ${record.category===category?"selected":""}>${escapeEditorValue(category)}</option>`
+      ).join("");
+      fields.innerHTML=`
+        <label class="editor-field">Product name<input name="name" maxlength="80" value="${escapeEditorValue(record.name)}" required></label>
+        <label class="editor-field">Category<select name="category">${categoryOptions}</select></label>
+        <label class="editor-field">Price (NPR)<input name="price" type="number" min="1" step="1" value="${record.price}" required></label>
+        <label class="editor-field">Stock quantity<input name="stock" type="number" min="0" step="1" value="${record.stock}" required></label>
+        <label class="editor-field">Environments, comma-separated<input name="env" maxlength="120" value="${escapeEditorValue(record.env.join(", "))}" required></label>
+        <label class="editor-field">Description<textarea name="desc" maxlength="300" required>${escapeEditorValue(record.desc)}</textarea></label>`;
+    }else{
+      const units=["visit","session","month"];
+      const currentUnit=record.price.split("/").pop().trim();
+      const unitOptions=units.map(unit=>`<option value="${unit}" ${currentUnit===unit?"selected":""}>per ${unit}</option>`).join("");
+      fields.innerHTML=`
+        <label class="editor-field">Expert name<input name="name" maxlength="80" value="${escapeEditorValue(record.name)}" required></label>
+        <label class="editor-field">Specialty<input name="specialty" maxlength="100" value="${escapeEditorValue(record.specialty)}" required></label>
+        <label class="editor-field">Rate (NPR)<input name="priceAmount" type="number" min="1" step="1" value="${record.priceAmount}" required></label>
+        <label class="editor-field">Rate unit<select name="priceUnit">${unitOptions}</select></label>
+        <label class="editor-field">Profile description<textarea name="bio" maxlength="300" required>${escapeEditorValue(record.bio)}</textarea></label>`;
+    }
+    document.getElementById("catalog-editor").showModal();
+  }
+
+  function saveCatalogEdit(event){
+    event.preventDefault();
+    const form=event.currentTarget;
+    const type=form.dataset.recordType;
+    const id=Number(form.dataset.recordId);
+    const values=Object.fromEntries(new FormData(form).entries());
+    const message=document.getElementById("catalog-editor-message");
+    const plainText=value=>String(value || "").trim();
+    const validText=value=>value.length>0 && value.length<=300 && !/[<>]/.test(value);
+    const overrides=readLS(LS.catalogOverrides,{});
+    if(!overrides || typeof overrides!=="object" || Array.isArray(overrides)){
+      message.textContent="Saved catalog data is invalid. Refresh the page and try again.";
+      return;
+    }
+    const next={
+      products:overrides.products && typeof overrides.products==="object" ? {...overrides.products} : {},
+      experts:overrides.experts && typeof overrides.experts==="object" ? {...overrides.experts} : {},
+    };
+    if(type==="product"){
+      const name=plainText(values.name);
+      const desc=plainText(values.desc);
+      const category=String(values.category);
+      const price=Number(values.price);
+      const stock=Number(values.stock);
+      const env=[...new Set(plainText(values.env).split(",").map(item=>item.trim()).filter(Boolean))];
+      if(!validText(name) || !validText(desc) || !CATEGORIES.includes(category) || category==="All" ||
+         !Number.isSafeInteger(price) || price<=0 || !Number.isSafeInteger(stock) || stock<0 ||
+         !env.length || env.some(value=>!ENVIRONMENTS.includes(value))){
+        message.textContent="Check the product details. Use a valid category, whole-number price/stock and listed environments.";
+        return;
+      }
+      next.products[id]={name,desc,category,price,stock,env};
+    }else if(type==="expert"){
+      const name=plainText(values.name);
+      const specialty=plainText(values.specialty);
+      const bio=plainText(values.bio);
+      const priceAmount=Number(values.priceAmount);
+      const priceUnit=String(values.priceUnit);
+      if(!validText(name) || !validText(specialty) || !validText(bio) ||
+         !Number.isSafeInteger(priceAmount) || priceAmount<=0 || !["visit","session","month"].includes(priceUnit)){
+        message.textContent="Check the expert details and enter a valid whole-number rate.";
+        return;
+      }
+      next.experts[id]={name,specialty,bio,priceAmount,priceUnit};
+    }else{
+      message.textContent="This item type cannot be edited.";
+      return;
+    }
+    try{
+      const serialized=JSON.stringify(next);
+      localStorage.setItem(LS.catalogOverrides,serialized);
+      if(localStorage.getItem(LS.catalogOverrides)!==serialized) throw new Error("Catalog update could not be verified.");
+    }catch(error){
+      message.textContent="Could not save these changes in this browser. Check available storage and try again.";
+      return;
+    }
+    applyCatalogOverrides();
+    renderProducts();
+    renderExperts();
+    document.getElementById("catalog-editor").close();
+    toast("Changes saved for this browser.");
   }
 
   function renderAppointments(){
@@ -319,17 +427,39 @@
   }
 
   function renderOrders(){
-    const orders = readLS(LS.orders, []);
+    const orders = getOrders();
     document.getElementById("orders-body").innerHTML = orders.length ? orders.map(o=>`
       <tr>
         <td>${o.id}</td>
         <td>${o.items.reduce((s,i)=>s+i.qty,0)} item(s)</td>
         <td>NPR ${o.total.toLocaleString()}</td>
-        <td>${o.paymentMethod === "cash" ? "Cash on delivery" : o.paymentMethod === "wallet" ? "GreenNest wallet" : o.paymentMethod === "card" ? "Card (simulated)" : "Not recorded"}</td>
-        <td>${o.status || "Order placed"}</td>
+        <td>${o.paymentMethod === "cash" ? `Cash on delivery · ${o.paymentStatus === "paid in cash on delivery" ? "Received" : "Due"}` : o.paymentMethod === "wallet" ? "GreenNest wallet · Paid" : o.paymentMethod === "card" ? "Card (simulated; unpaid)" : "Not recorded"}</td>
+        <td>${o.deliveryStatus}</td>
         <td>${new Date(o.date).toLocaleDateString()}</td>
+        <td><div class="row-actions">
+          ${o.deliveryStatus !== "Delivered" ? `<button onclick="advanceDelivery('${o.id}')">Set: ${ORDER_DELIVERY_STAGES[ORDER_DELIVERY_STAGES.indexOf(o.deliveryStatus)+1]}</button>` : ""}
+          ${o.paymentMethod === "cash" && o.deliveryStatus === "Delivered" && o.paymentStatus !== "paid in cash on delivery" ? `<button onclick="receiveCash('${o.id}')">Record cash received</button>` : ""}
+        </div></td>
       </tr>
-    `).join("") : `<tr><td colspan="6" style="text-align:center; color:rgba(22,48,42,.5); padding:30px;">No orders yet.</td></tr>`;
+    `).join("") : `<tr><td colspan="7" style="text-align:center; color:rgba(22,48,42,.5); padding:30px;">No orders yet.</td></tr>`;
+  }
+
+  function advanceDelivery(orderId){
+    const result=advanceOrderDelivery(orderId);
+    if(!result.ok){toast(result.message);return;}
+    renderOrders();
+    renderActivity();
+    toast(`Order ${orderId} updated: ${result.status}.`);
+  }
+
+  function receiveCash(orderId){
+    const result=markCashOrderReceived(orderId);
+    if(!result.ok){toast(result.message);return;}
+    renderOrders();
+    renderPayments();
+    renderActivity();
+    renderKPIs();
+    toast(`Cash receipt recorded: NPR ${result.payment.amount.toLocaleString()}.`);
   }
 
   function renderPayments(){
@@ -354,8 +484,8 @@
     toast("Product report downloaded");
   }
   function exportOrders(){
-    const orders = readLS(LS.orders, []);
-    const rows = [["Order ID","Items","Total","Payment method","Payment status","Date"], ...orders.map(o=>[o.id, o.items.reduce((s,i)=>s+i.qty,0), o.total, o.paymentMethod || "Not recorded", o.status || "Order placed", o.date])];
+    const orders = getOrders();
+    const rows = [["Order ID","Items","Total","Payment method","Payment status","Delivery status","Date"], ...orders.map(o=>[o.id, o.items.reduce((s,i)=>s+i.qty,0), o.total, o.paymentMethod || "Not recorded", o.paymentStatus || "Not recorded", o.deliveryStatus, o.date])];
     downloadCSV("greennest_orders.csv", rows);
     toast("Orders report downloaded");
   }

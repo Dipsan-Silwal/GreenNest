@@ -172,7 +172,7 @@
     if(!customerEmail){ toast("Please enter your email address"); return; }
     if(!date){ toast("Please choose a date"); return; }
     const session = getSession();
-    const booking = addBooking({ expertId, expertName: e.name, specialty: e.specialty, price: e.price, customerUsername:session?.username, customerEmail, customerName:session?.label || "Guest", date: `${date} · ${time}`, note });
+    const booking = addBooking({ expertId, expertName: e.name, specialty: e.specialty, price: e.price, priceAmount:e.priceAmount, customerUsername:session?.username, customerEmail, customerName:session?.label || "Guest", date: `${date} · ${time}`, note });
     const submitButton = ev.submitter;
     submitButton.disabled = true;
     try{
@@ -205,7 +205,7 @@
         </div>
         <div>
           <span class="bk-status">${b.status}</span>
-          ${b.status==="Accepted" && b.paymentStatus!=="Paid via GreenNest wallet (simulated)" ? `<button class="btn btn-primary btn-sm" onclick="payForBooking('${b.id}')">Pay from wallet · NPR ${(EXPERTS.find(e=>e.id===b.expertId)?.priceAmount || 0).toLocaleString()}</button>` : ""}
+          ${b.status==="Accepted" && b.paymentStatus!=="Paid via GreenNest wallet (simulated)" ? `<button class="btn btn-primary btn-sm" onclick="payForBooking('${b.id}')">Pay from wallet · NPR ${getBookingPriceAmount(b).toLocaleString()}</button>` : ""}
           ${["Pending confirmation","Rejected"].includes(b.status) ? `<button class="bk-cancel" onclick="cancelMyBooking('${b.id}')">Cancel</button>` : ""}
         </div>
       </div>

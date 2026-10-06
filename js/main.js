@@ -13,6 +13,7 @@ const LS = {
   plants: "greennest_plants",
   session: "greennest_session",
   wallets: "greennest_wallets",
+  catalogOverrides: "greennest_catalog_overrides",
 };
 
 const SAMPLE_USERS = {
@@ -89,15 +90,15 @@ function checkPageAccess(){
   }
 
   const allowed = {
-    home: ["customer", "expert", "admin"],
-    shop: ["customer", "expert", "admin"],
-    quiz: ["customer", "expert", "admin"],
-    companion: ["customer", "expert", "admin"],
-    dashboard: ["customer", "admin"],
-    checkout: ["customer", "expert", "admin"],
-    experts: ["customer", "expert", "admin"],
+    home: ["customer"],
+    shop: ["customer"],
+    quiz: ["customer"],
+    companion: ["customer"],
+    dashboard: ["customer"],
+    checkout: ["customer"],
+    experts: ["customer"],
     admin: ["admin"],
-    "expert-panel": ["expert", "admin"],
+    "expert-panel": ["expert"],
   };
 
   if(allowed[page] && !allowed[page].includes(session.role)){
@@ -133,6 +134,36 @@ function removeStoredFields(key, fields){
 }
 removeStoredFields(LS.orders, ["shipping"]);
 removeStoredFields(LS.bookings, ["customerEmail", "customerName"]);
+
+function applyCatalogOverrides(){
+  const overrides = readLS(LS.catalogOverrides, {});
+  const products = overrides && overrides.products && typeof overrides.products === "object" ? overrides.products : {};
+  const experts = overrides && overrides.experts && typeof overrides.experts === "object" ? overrides.experts : {};
+  PRODUCTS.forEach(product=>{
+    const saved = products[product.id];
+    if(!saved || typeof saved !== "object") return;
+    if(typeof saved.name === "string") product.name = saved.name;
+    if(CATEGORIES.includes(saved.category) && saved.category !== "All") product.category = saved.category;
+    if(Number.isSafeInteger(saved.price) && saved.price > 0) product.price = saved.price;
+    if(Number.isSafeInteger(saved.stock) && saved.stock >= 0) product.stock = saved.stock;
+    if(typeof saved.desc === "string") product.desc = saved.desc;
+    if(Array.isArray(saved.env) && saved.env.length && saved.env.every(value=>ENVIRONMENTS.includes(value))){
+      product.env = [...new Set(saved.env)];
+    }
+  });
+  EXPERTS.forEach(expert=>{
+    const saved = experts[expert.id];
+    if(!saved || typeof saved !== "object") return;
+    if(typeof saved.name === "string") expert.name = saved.name;
+    if(typeof saved.specialty === "string") expert.specialty = saved.specialty;
+    if(typeof saved.bio === "string") expert.bio = saved.bio;
+    if(Number.isSafeInteger(saved.priceAmount) && saved.priceAmount > 0){
+      expert.priceAmount = saved.priceAmount;
+      expert.price = `NPR ${saved.priceAmount.toLocaleString()} / ${saved.priceUnit || "visit"}`;
+    }
+  });
+}
+applyCatalogOverrides();
 function userStorageKey(key){
   const username = getSession()?.username || "guest";
   return `${key}_${username}`;
@@ -145,47 +176,6 @@ function gnTrack(eventName, parameters={}, metaEvent=null, metaParameters={}){
   }
   if(typeof window.fbq === "function" && metaEvent){
     window.fbq("track", metaEvent, metaParameters);
-  }
-  gnLogMarketingEvent(eventName);
-}
-
-function gnLogMarketingEvent(eventName){
-  const allowedEvents = new Set([
-    "page_view", "view_item_list", "click", "recommendation_click", "add_to_cart",
-    "begin_checkout", "add_shipping_info", "add_payment_info", "purchase", "generate_lead",
-  ]);
-  if(!allowedEvents.has(eventName)) return;
-  const events = readLS("greennest_marketing_events", []);
-  events.unshift({ name:eventName, time:new Date().toISOString() });
-  writeLS("greennest_marketing_events", events.slice(0, 8));
-  gnRenderMarketingPanel();
-}
-
-function gnRenderMarketingPanel(){
-  const panel = document.getElementById("marketing-integration-panel");
-  if(!panel) return;
-  const config = window.GN_TRACKING_CONFIG || {};
-  const ids = config.placeholderIds || {};
-  const tools = [
-    { key:"ga4", name:"Google Analytics 4", configured:Boolean(config.ga4Id), placeholderId:ids.ga4 || "NOT-CONFIGURED" },
-    { key:"metaPixel", name:"Meta Pixel", configured:Boolean(config.metaPixelId), placeholderId:ids.metaPixel || "NOT-CONFIGURED" },
-    { key:"adsense", name:"Google AdSense", configured:Boolean(config.adsenseClient && config.adsenseSlot), placeholderId:`${ids.adsenseClient || "NOT-CONFIGURED"} / ${ids.adsenseSlot || "NOT-CONFIGURED"}` },
-  ];
-  const list = document.getElementById("marketing-integration-tools");
-  if(list){
-    list.innerHTML = tools.map(tool=>`
-      <div class="marketing-tool">
-        <span><strong>${tool.name}</strong><code>${tool.placeholderId}</code></span>
-        <span class="marketing-status">${tool.configured ? "Configured" : "Not configured"}</span>
-      </div>
-    `).join("");
-  }
-  const events = readLS("greennest_marketing_events", []);
-  const eventList = document.getElementById("marketing-activity");
-  if(eventList){
-    eventList.innerHTML = events.length
-      ? events.map(event=>`<li><code>${event.name}</code><time>${new Date(event.time).toLocaleTimeString()}</time></li>`).join("")
-      : "<li>Recent browsing activity will appear here.</li>";
   }
 }
 
@@ -291,7 +281,6 @@ function gnTrackProductCard(card){
 }
 
 gnStartAnalytics();
-gnLogMarketingEvent("page_view");
 
 document.addEventListener("click", event=>{
   const target = event.target instanceof Element ? event.target.closest("a, button") : null;
@@ -358,9 +347,10 @@ function getPaymentHistory(){
 }
 function recordPayment(payment){
   const payments = getPaymentHistory();
-  if(payments.some(entry=>entry.reference === payment.reference)) return;
+  if(payments.some(entry=>entry.reference === payment.reference)) return false;
   payments.unshift({ ...payment, id:"PAY" + Date.now().toString(36).toUpperCase(), date:new Date().toISOString() });
   writeLS(LS.payments, payments);
+  return true;
 }
 function isValidEsewaCredentials(esewaId, mpin){
   const walletId = String(esewaId || "").replace(/\D/g, "");
@@ -414,8 +404,8 @@ function payForExpertBooking(bookingId){
   if(booking.status !== "Accepted") return { ok:false, message:"Payment is available after the expert accepts your booking." };
   if(booking.paymentStatus === "Paid via GreenNest wallet (simulated)") return { ok:false, message:"This booking has already been paid." };
   const expert = EXPERTS.find(item=>item.id === booking.expertId);
-  if(!expert || !Number.isSafeInteger(expert.priceAmount) || expert.priceAmount <= 0) return { ok:false, message:"The expert service price is unavailable." };
-  const total = expert.priceAmount;
+  const total = getBookingPriceAmount(booking);
+  if(!expert || !Number.isSafeInteger(total) || total <= 0) return { ok:false, message:"The expert service price is unavailable." };
   const adminAmount = Math.round(total * 0.2);
   const expertAmount = total - adminAmount;
   const expertUsername = `expert${expert.id}`;
@@ -453,8 +443,128 @@ function payForExpertBooking(bookingId){
   writeLS(LS.bookings, bookings);
   return { ok:true, total, expertAmount, adminAmount, customerBalance:customerWallet.balance };
 }
+function getBookingPriceAmount(booking){
+  if(Number.isSafeInteger(booking?.priceAmount) && booking.priceAmount > 0) return booking.priceAmount;
+  const amount = Number(String(booking?.price || "").replace(/\D/g, ""));
+  if(Number.isSafeInteger(amount) && amount > 0) return amount;
+  const expert = EXPERTS.find(item=>item.id === booking?.expertId);
+  return expert?.priceAmount || 0;
+}
 function getUserOrders(username=getSession()?.username){
-  return readLS(LS.orders, []).filter(order=>order.customerUsername === username);
+  return getOrders().filter(order=>order.customerUsername === username);
+}
+
+const ORDER_DELIVERY_STAGES = ["Preparing order", "Left store", "In transit", "Out for delivery", "Delivered"];
+function getOrders(){
+  const orders=readLS(LS.orders, []);
+  let changed=false;
+  orders.forEach(order=>{
+    if(!order || typeof order!=="object") return;
+    if(!ORDER_DELIVERY_STAGES.includes(order.deliveryStatus)){
+      order.deliveryStatus="Preparing order";
+      changed=true;
+    }
+    if(!Array.isArray(order.deliveryHistory) || order.deliveryHistory.length===0){
+      order.deliveryHistory=[{status:order.deliveryStatus,date:order.date || new Date().toISOString()}];
+      changed=true;
+    }
+    if(!order.paymentStatus){
+      order.paymentStatus=order.paymentMethod==="cash" ? "payment due on delivery"
+        : order.paymentMethod==="wallet" ? "paid from GreenNest wallet"
+        : "simulated; no charge collected";
+      changed=true;
+    }
+    if(order.status!==order.deliveryStatus){
+      order.status=order.deliveryStatus;
+      changed=true;
+    }
+  });
+  if(changed) writeLS(LS.orders,orders);
+  return orders;
+}
+function writeLocalStorageTransaction(updates){
+  const originals=new Map();
+  try{
+    Object.keys(updates).forEach(key=>originals.set(key,localStorage.getItem(key)));
+    Object.entries(updates).forEach(([key,value])=>{
+      const serialized=JSON.stringify(value);
+      localStorage.setItem(key,serialized);
+      if(localStorage.getItem(key)!==serialized) throw new Error(`Could not verify saved data for ${key}.`);
+    });
+    return true;
+  }catch(error){
+    originals.forEach((value,key)=>{
+      try{
+        if(value===null) localStorage.removeItem(key);
+        else localStorage.setItem(key,value);
+      }catch(rollbackError){
+        console.error("Unable to restore local order data after a failed update.",rollbackError);
+      }
+    });
+    console.error("Unable to save the order update.",error);
+    return false;
+  }
+}
+function advanceOrderDelivery(orderId){
+  if(getSession()?.role!=="admin") return {ok:false,message:"Only an admin can update delivery status."};
+  const orders=getOrders();
+  const order=orders.find(item=>item.id===orderId);
+  if(!order) return {ok:false,message:"Order not found."};
+  const currentIndex=ORDER_DELIVERY_STAGES.indexOf(order.deliveryStatus);
+  if(currentIndex<0 || currentIndex===ORDER_DELIVERY_STAGES.length-1){
+    return {ok:false,message:"This order has reached its final delivery status."};
+  }
+  const nextStatus=ORDER_DELIVERY_STAGES[currentIndex+1];
+  const updated={...order,deliveryStatus:nextStatus,status:nextStatus,
+    deliveryHistory:[...order.deliveryHistory,{status:nextStatus,date:new Date().toISOString()}]};
+  const nextOrders=orders.map(item=>item.id===orderId ? updated : item);
+  if(!writeLocalStorageTransaction({[LS.orders]:nextOrders})){
+    return {ok:false,message:"Could not save the delivery update in this browser."};
+  }
+  return {ok:true,order:updated,status:nextStatus};
+}
+function markCashOrderReceived(orderId){
+  if(getSession()?.role!=="admin") return {ok:false,message:"Only an admin can record a cash payment."};
+  const orders=getOrders();
+  const order=orders.find(item=>item.id===orderId);
+  if(!order) return {ok:false,message:"Order not found."};
+  if(order.paymentMethod!=="cash") return {ok:false,message:"Only cash-on-delivery orders can be marked as cash received."};
+  if(order.deliveryStatus!=="Delivered") return {ok:false,message:"Mark the order delivered before recording cash received."};
+  if(order.paymentStatus==="paid in cash on delivery"){
+    return {ok:false,message:"Cash payment is already recorded for this order."};
+  }
+  const payments=getPaymentHistory();
+  if(payments.some(payment=>payment.reference===order.id)){
+    return {ok:false,message:"A payment record already exists for this order. Check the payment history."};
+  }
+  const wallets=getWallets();
+  const adminWallet=wallets[MERCHANT_USERNAME] || {balance:0,transactions:[]};
+  const collectedAt=new Date().toISOString();
+  adminWallet.balance+=order.total;
+  addWalletTransaction(adminWallet,{type:"credit",amount:order.total,label:"Cash collected on delivery",reference:order.id});
+  wallets[MERCHANT_USERNAME]=adminWallet;
+  const payment={
+    id:"PAY"+Date.now().toString(36).toUpperCase(),
+    type:"Plant and garden order",
+    reference:order.id,
+    payer:order.customerUsername || "Customer",
+    method:"Cash on delivery",
+    amount:order.total,
+    expertAmount:0,
+    adminAmount:order.total,
+    status:"Cash collected and recorded by admin (local)",
+    date:collectedAt,
+  };
+  const updatedOrder={...order,paymentStatus:"paid in cash on delivery",cashReceivedAt:collectedAt};
+  const nextOrders=orders.map(item=>item.id===orderId ? updatedOrder : item);
+  if(!writeLocalStorageTransaction({
+    [LS.orders]:nextOrders,
+    [LS.wallets]:wallets,
+    [LS.payments]:[payment,...payments],
+  })){
+    return {ok:false,message:"Could not record the cash payment in this browser."};
+  }
+  return {ok:true,order:updatedOrder,payment};
 }
 
 /* ---------------- CART ---------------- */
@@ -547,15 +657,18 @@ function placeOrder(shippingDetails=null, paymentDetails=null){
     const payment = chargeWallet(session.username, MERCHANT_USERNAME, total, orderId);
     if(!payment.ok) return { error:payment.message };
   }
-  const orders = readLS(LS.orders, []);
+  const orders = getOrders();
+  const placedAt = new Date().toISOString();
   const order = {
     id: orderId,
     items:orderItems,
     total,
     paymentMethod:paymentDetails.method,
     paymentStatus:paymentDetails.status,
-    date: new Date().toISOString(),
-    status:paymentDetails.method === "cash" ? "Awaiting cash on delivery" : paymentDetails.method === "wallet" ? "Paid from GreenNest wallet" : "Card authorization simulated; no charge collected",
+    date: placedAt,
+    status:"Preparing order",
+    deliveryStatus:"Preparing order",
+    deliveryHistory:[{status:"Preparing order",date:placedAt}],
     shipping:shippingDetails,
     customerUsername:session.username,
     customerName:session.label,
@@ -867,5 +980,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
   ensureAuthUI();
   checkPageAccess();
   updateBadges();
-  gnRenderMarketingPanel();
 });

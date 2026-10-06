@@ -61,6 +61,12 @@
   .wallet-ledger .summary-row{ color:var(--sage); border-color:rgba(255,255,255,.12); font-size:12px; }
   .wallet-ledger .credit{ color:#9ee0a9; }
   .wallet-ledger .debit{ color:#f0b19d; }
+  .order-tracking{ width:100%; margin-top:10px; padding:10px 12px; border-radius:10px; background:rgba(78,122,86,.07); }
+  .order-tracking-title{ display:flex; justify-content:space-between; gap:12px; font-size:12px; font-weight:600; }
+  .order-tracking-list{ display:grid; gap:6px; margin:8px 0 0; padding:0; list-style:none; }
+  .order-tracking-list li{ display:flex; justify-content:space-between; gap:12px; color:rgba(22,48,42,.65); font-size:11px; }
+  .order-tracking-list li.current{ color:var(--forest); font-weight:700; }
+  .order-tracking-list time{ white-space:nowrap; font-weight:400; }
 
   @media (max-width:900px){ .dash-grid{ grid-template-columns:1fr; } }
 </style>
@@ -349,16 +355,62 @@
   }
 
   /* ---------- Orders ---------- */
+  function notifyDeliveryUpdates(orders){
+    const username=getSession()?.username;
+    if(!username) return;
+    const key=`greennest_delivery_seen_${username}`;
+    const saved=readLS(key,{});
+    const seen=saved && typeof saved==="object" && !Array.isArray(saved) ? saved : {};
+    let changed=false;
+    orders.forEach(order=>{
+      const history=Array.isArray(order.deliveryHistory) ? order.deliveryHistory : [];
+      const status=history[history.length-1]?.status || order.deliveryStatus || "Preparing order";
+      if((seen[order.id] && seen[order.id]!==status) || (!seen[order.id] && status!=="Preparing order")){
+        toast(`Delivery update for ${order.id}: ${status}`);
+      }
+      if(seen[order.id]!==status){seen[order.id]=status;changed=true;}
+    });
+    if(changed) writeLS(key,seen);
+  }
+
   function renderOrders(){
     const orders = getUserOrders();
     const box = document.getElementById("orders-list");
     if(orders.length===0){ box.innerHTML = `<div class="empty-mini">No orders yet — place one from the shop.</div>`; return; }
-    box.innerHTML = orders.map(o=>`
-      <div class="summary-row">
-        <span>${o.id} · ${o.items.reduce((s,i)=>s+i.qty,0)} item(s) · ${new Date(o.date).toLocaleDateString()}<br><small>${o.paymentMethod === "cash" ? "Cash on delivery" : o.paymentMethod === "wallet" ? "GreenNest wallet" : o.paymentMethod === "card" ? "Card (simulated; no charge)" : "Payment method not recorded"} · ${o.status || "Order placed"}</small></span>
+    notifyDeliveryUpdates(orders);
+    box.innerHTML = orders.map(o=>{
+      const tracking=Array.isArray(o.deliveryHistory) ? o.deliveryHistory : [{status:o.deliveryStatus || "Preparing order",date:o.date}];
+      const latest=tracking[tracking.length-1];
+      const paymentLabel=o.paymentMethod==="cash"
+        ? (o.paymentStatus==="paid in cash on delivery" ? "Cash received" : "Cash due on delivery")
+        : o.paymentMethod==="wallet" ? "Wallet paid"
+        : o.paymentMethod==="card" ? "Card simulated; no charge"
+        : "Payment not recorded";
+      return `
+      <article class="summary-row" style="flex-wrap:wrap;">
+        <span>${o.id} · ${o.items.reduce((s,i)=>s+i.qty,0)} item(s) · ${new Date(o.date).toLocaleDateString()}<br><small>${paymentLabel}</small></span>
         <span>NPR ${o.total.toLocaleString()}</span>
-      </div>`).join("");
+        <div class="order-tracking" role="status" aria-label="Latest delivery notification">
+          <div class="order-tracking-title"><span>Latest update: ${latest.status}</span><time>${new Date(latest.date).toLocaleString()}</time></div>
+          <ol class="order-tracking-list">${tracking.map((entry,index)=>`
+            <li class="${index===tracking.length-1?"current":""}">
+              <span>${entry.status}</span><time>${new Date(entry.date).toLocaleString()}</time>
+            </li>`).join("")}</ol>
+        </div>
+      </article>`;
+    }).join("");
   }
+  window.addEventListener("storage", event=>{
+    if(event.key!==LS.orders || !event.newValue) return;
+    let orders;
+    try{ orders=JSON.parse(event.newValue); }
+    catch(error){ console.error("Could not read the updated order notification.",error); return; }
+    const username=getSession()?.username;
+    if(!Array.isArray(orders) || !username) return;
+    const customerOrders=orders.filter(order=>order.customerUsername===username);
+    notifyDeliveryUpdates(customerOrders);
+    renderOrders();
+  });
 
   function renderWallet(){
     document.getElementById("wallet-balance").textContent = "NPR " + getWalletBalance().toLocaleString();
