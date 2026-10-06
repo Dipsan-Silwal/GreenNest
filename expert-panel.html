@@ -138,6 +138,7 @@
         <div class="req-info">
           <div class="title">${b.date}</div>
           <div class="meta">Requested for: ${b.specialty}${b.note ? "" : ""}</div>
+          <div class="meta">${b.paymentStatus || "Unpaid — awaiting expert acceptance"}</div>
           ${b.note ? `<div class="note">"${b.note}"</div>` : ""}
         </div>
         <div class="req-actions">
@@ -146,14 +147,16 @@
             <button class="btn btn-gold btn-sm" onclick="respond('${b.id}','Accepted')">Accept</button>
             <button class="btn btn-ghost-dark btn-sm" onclick="respond('${b.id}','Rejected')">Reject</button>
           ` : ""}
-          ${b.status==="Accepted" ? `<button class="btn btn-ghost-dark btn-sm" onclick="respond('${b.id}','Completed')">Mark completed</button>` : ""}
+          ${b.status==="Accepted" && b.paymentStatus==="Paid via GreenNest wallet (simulated)" ? `<button class="btn btn-ghost-dark btn-sm" onclick="respond('${b.id}','Completed')">Mark completed</button>` : ""}
+          ${b.status==="Accepted" && b.paymentStatus!=="Paid via GreenNest wallet (simulated)" ? `<span class="status-tag pending">Awaiting customer payment</span>` : ""}
         </div>
       </div>
     `).join("");
   }
 
   function respond(bookingId, status){
-    updateBookingStatus(bookingId, status);
+    const result=updateBookingStatus(bookingId, status);
+    if(!result.ok){toast(result.message);return;}
     renderAll();
     toast(`Booking marked as ${status}`);
   }

@@ -116,13 +116,14 @@ For production, use your hosting platform or reverse proxy to obtain, renew, and
 - **Companion Planner** — real compatibility logic (good/bad pairings) and season-based filtering
 - **Weather reminders** — calls the free [Open-Meteo](https://open-meteo.com) API live, using your browser's geolocation (falls back to Kathmandu), and generates watering/heat/rain alerts from the actual forecast
 - **Growth journal** — add plants, log care notes, see a visual timeline of activity
-- **Expert bookings** — a booking form writes into local storage; the **Expert Panel** reads the same data and lets you accept/reject it, completing the request → response loop
+- **Expert bookings** — requests remain unpaid until accepted. The customer can then pay from the local GreenNest wallet simulation; successful simulated payments split 80% to the expert and 20% to GreenNest, rounded to whole NPR with any rounding remainder going to the expert.
+- **Admin payment history** — the Payments tab shows wallet receipts, payer account, method, reference, and expert/GreenNest allocations; export the ledger as CSV. It includes wallet-paid plant orders and simulated paid expert bookings. Cash-on-delivery remains unpaid until collection, and simulated card orders are not counted as money received.
 - **Admin reports** — the Reports tab exports real CSV files (products, orders, bookings) generated from live app state
-- **Purchase recommendations** — the shop uses user-based collaborative filtering over orders stored in this browser, with category/catalog fallback for new customers
+- **Purchase recommendations** — the shop combines explicit related-product suggestions (compatible plants, fertilizer, pots and tools) with category affinity and collaborative filtering over purchase histories saved in this browser
 - **Analytics hooks** — optional GA4 and Meta Pixel page views, product-list impressions, clicks, cart/checkout funnel, purchases and consultation leads; blank IDs disable third-party requests
 - **Marketing integration panel** — the shop shows placeholder provider IDs and a local-only event list. Activity is not sent to third parties unless you configure provider IDs.
 - **Order fingerprint preview** — the order screen displays a browser-generated SHA-256 hash of the order ID, total, timestamp and product IDs/quantities. This informational fingerprint does not secure, verify or authenticate a payment.
-- **Checkout** — cash on delivery and the GreenNest wallet place orders. Card fields are validated locally only; card authorization is simulated, no charge is taken, and card details are not stored or transmitted.
+- **Checkout and expert payments** — cash on delivery and the GreenNest wallet place plant orders. Expert services require wallet payment after acceptance and use the 80/20 simulated split. Wallet loading uses a local simulation; card fields are validated locally only, no real card authorization or charge occurs, and card details are not stored or transmitted.
 
 ## How to customize / re-edit
 
@@ -139,7 +140,7 @@ Everything is organized so a specific change lives in one obvious place:
 
 ## Honest scope notes
 
-Booking email delivery uses the Node.js backend and Gmail SMTP. Other application data still lives in the browser via `localStorage` instead of a database, so collaborative filtering sees only orders made in the same browser; it needs multiple shoppers' histories in that browser to find similar buyers. New shoppers see starter catalog recommendations until purchase history is available. The Customer, Expert, and Admin modules remain local prototypes. Card authorization is simulated and no funds are collected; real card processing requires a payment provider and server-side integration. Real analytics/ad reporting requires valid account IDs; AdSense also requires publisher approval and a configured ad unit/domain. Add an appropriate consent flow and privacy notice before enabling third-party tracking for real visitors.
+Booking email delivery uses the Node.js backend and Gmail SMTP. Orders, bookings, wallet balances, expert 80/20 allocations, and the admin payment ledger are all stored in browser `localStorage`, not in a shared or trusted database. They are for demonstration only: no real money moves, eSewa top-ups are simulated, and another browser/device will not see this payment history. Do not use the client-side balances, split, or history to settle real funds. Production payments require an authenticated server-side database and a real payment provider with verified webhooks, refunds, and reconciliation. Collaborative filtering likewise sees only this browser's order history; new shoppers see related catalog suggestions until purchase history is available. Real analytics/ad reporting requires valid account IDs; AdSense also requires publisher approval and a configured ad unit/domain. Add an appropriate consent flow and privacy notice before enabling third-party tracking for real visitors.
 
 ## Tech used
 

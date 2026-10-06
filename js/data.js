@@ -3,12 +3,12 @@
    ========================================================== */
 
 const PRODUCTS = [
-  { id:1,  name:"Snake Plant",          category:"Plants", env:["Indoor"], light:"low", price:450, stock:14, image:"https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=700&q=80", desc:"Near-indestructible, air-purifying, thrives on neglect." },
-  { id:2,  name:"Money Plant (Pothos)", category:"Plants", env:["Indoor","Balcony"], light:"low", price:250, stock:22, image:"https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=700&q=80", desc:"Fast-growing trailing vine, great for shelves and hanging pots." },
-  { id:3,  name:"Basil",                category:"Plants", env:["Outdoor","Balcony"], light:"high", price:120, stock:30, image:"https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=700&q=80", desc:"Fragrant kitchen herb, loves full sun and regular watering." },
-  { id:4,  name:"Marigold",             category:"Plants", env:["Outdoor","Rooftop"], light:"high", price:90, stock:40, image:"https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=700&q=80", desc:"Bright, pest-repelling companion flower for vegetable beds." },
-  { id:5,  name:"Tomato Sapling",       category:"Plants", env:["Outdoor","Rooftop"], light:"high", price:150, stock:18, image:"https://images.unsplash.com/photo-1592841200221-2d6b049fc4b2?auto=format&fit=crop&w=700&q=80", desc:"A rooftop favourite — pairs beautifully with basil and marigold." },
-  { id:6,  name:"Areca Palm",           category:"Plants", env:["Indoor"], light:"med", price:850, stock:8, image:"https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=700&q=80", desc:"Statement indoor palm that thrives in bright, indirect light." },
+  { id:1,  name:"Snake Plant",          category:"Plants", env:["Indoor"], light:"low", price:450, stock:14, relatedIds:[6,13,14,15,17,20,21], image:"https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=700&q=80", desc:"Near-indestructible, air-purifying, thrives on neglect." },
+  { id:2,  name:"Money Plant (Pothos)", category:"Plants", env:["Indoor","Balcony"], light:"low", price:250, stock:22, relatedIds:[13,14,15,17,18,20,21], image:"https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=700&q=80", desc:"Fast-growing trailing vine, great for shelves and hanging pots." },
+  { id:3,  name:"Basil",                category:"Plants", env:["Outdoor","Balcony"], light:"high", price:120, stock:30, relatedIds:[5,8,10,11,13,16,17,18], image:"https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=700&q=80", desc:"Fragrant kitchen herb, loves full sun and regular watering." },
+  { id:4,  name:"Marigold",             category:"Plants", env:["Outdoor","Rooftop"], light:"high", price:90, stock:40, relatedIds:[5,9,10,12,16,17,19], image:"https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=700&q=80", desc:"Bright, pest-repelling companion flower for vegetable beds." },
+  { id:5,  name:"Tomato Sapling",       category:"Plants", env:["Outdoor","Rooftop"], light:"high", price:150, stock:18, relatedIds:[3,4,7,9,10,12,16,17,19], image:"https://images.unsplash.com/photo-1592841200221-2d6b049fc4b2?auto=format&fit=crop&w=700&q=80", desc:"A rooftop favourite — pairs beautifully with basil and marigold." },
+  { id:6,  name:"Areca Palm",           category:"Plants", env:["Indoor"], light:"med", price:850, stock:8, relatedIds:[1,13,14,15,17,20,21], image:"https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=700&q=80", desc:"Statement indoor palm that thrives in bright, indirect light." },
   { id:7,  name:"Tomato Seeds (pack)",  category:"Seeds", env:["Outdoor","Rooftop"], light:"high", price:60, stock:50, image:"https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=700&q=80", desc:"Heirloom variety, 25 seeds per pack, high germination rate." },
   { id:8,  name:"Basil Seeds (pack)",   category:"Seeds", env:["Outdoor","Balcony"], light:"high", price:55, stock:45, image:"https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=700&q=80", desc:"Sweet basil seeds, ready to sow directly into soil." },
   { id:9,  name:"Marigold Seeds (pack)", category:"Seeds", env:["Outdoor","Rooftop"], light:"high", price:45, stock:60, image:"https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=700&q=80", desc:"Companion-planting classic, fast to sprout and flower." },
@@ -30,12 +30,12 @@ const CATEGORIES = ["All","Plants","Seeds","Fertilizers","Pots","Gardening tools
 const ENVIRONMENTS = ["All","Indoor","Outdoor","Rooftop","Balcony","Landscaping"];
 
 const EXPERTS = [
-  { id:1, name:"Sabina Gurung",  specialty:"Rooftop Garden Installation", rating:4.9, price:"NPR 2,500 / visit", avatar:"🧑‍🌾", bio:"8 years designing rooftop and terrace gardens across Kathmandu." },
-  { id:2, name:"Bikash Thapa",   specialty:"Landscaping",                 rating:4.7, price:"NPR 3,200 / visit", avatar:"👨‍🌾", bio:"Specializes in full-yard landscaping and irrigation layout." },
-  { id:3, name:"Anisha Rai",     specialty:"Plant Consultation",          rating:5.0, price:"NPR 900 / session", avatar:"🧑‍🔬", bio:"Houseplant specialist — diagnoses light, water and pest issues." },
-  { id:4, name:"Suman Lama",     specialty:"Disease Inspection",          rating:4.8, price:"NPR 1,100 / visit", avatar:"🧑‍⚕️", bio:"Identifies pests and disease early, prescribes organic treatment." },
-  { id:5, name:"Puja Shrestha",  specialty:"Monthly Maintenance",         rating:4.6, price:"NPR 4,000 / month", avatar:"👩‍🌾", bio:"Ongoing pruning, feeding and health checks on a fixed schedule." },
-  { id:6, name:"Rohit Karki",    specialty:"Home Visits",                 rating:4.9, price:"NPR 800 / visit",   avatar:"🧑‍🌾", bio:"General-purpose home gardening help, flexible scheduling." },
+  { id:1, name:"Sabina Gurung",  specialty:"Rooftop Garden Installation", rating:4.9, priceAmount:2500, price:"NPR 2,500 / visit", avatar:"🧑‍🌾", bio:"8 years designing rooftop and terrace gardens across Kathmandu." },
+  { id:2, name:"Bikash Thapa",   specialty:"Landscaping",                 rating:4.7, priceAmount:3200, price:"NPR 3,200 / visit", avatar:"👨‍🌾", bio:"Specializes in full-yard landscaping and irrigation layout." },
+  { id:3, name:"Anisha Rai",     specialty:"Plant Consultation",          rating:5.0, priceAmount:900, price:"NPR 900 / session", avatar:"🧑‍🔬", bio:"Houseplant specialist — diagnoses light, water and pest issues." },
+  { id:4, name:"Suman Lama",     specialty:"Disease Inspection",           rating:4.8, priceAmount:1100, price:"NPR 1,100 / visit", avatar:"🧑‍⚕️", bio:"Identifies pests and disease early, prescribes organic treatment." },
+  { id:5, name:"Puja Shrestha",  specialty:"Monthly Maintenance",          rating:4.6, priceAmount:4000, price:"NPR 4,000 / month", avatar:"👩‍🌾", bio:"Ongoing pruning, feeding and health checks on a fixed schedule." },
+  { id:6, name:"Rohit Karki",    specialty:"Home Visits",                  rating:4.9, priceAmount:800, price:"NPR 800 / visit",   avatar:"🧑‍🌾", bio:"General-purpose home gardening help, flexible scheduling." },
 ];
 
 const DEFAULT_CUSTOMER_AVATAR = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80";

@@ -233,7 +233,7 @@
     if(!recommendations.length) return;
     section.hidden = false;
     document.getElementById("recommendations-copy").textContent = getUserOrders().length
-      ? "Suggestions use your order history and purchase patterns saved in this browser."
+      ? "Suggestions combine related plants and supplies with your purchase history saved in this browser."
       : "Starter picks from the GreenNest catalog. Suggestions will personalize after your first order.";
     grid.innerHTML = recommendations.map(p=>`
       <article class="recommendation-card" data-product-id="${p.id}" data-list-name="Purchase recommendations">

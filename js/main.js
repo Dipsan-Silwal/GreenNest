@@ -9,6 +9,7 @@ const LS = {
   journal: "greennest_journal",
   bookings: "greennest_bookings",
   orders: "greennest_orders",
+  payments: "greennest_payment_history",
   plants: "greennest_plants",
   session: "greennest_session",
   wallets: "greennest_wallets",
@@ -331,6 +332,36 @@ function getWalletBalance(username=getSession()?.username){ return Number(getWal
 function addWalletTransaction(wallet, transaction){
   wallet.transactions.unshift({ ...transaction, date: new Date().toISOString() });
 }
+function getPaymentHistory(){
+  const payments=readLS(LS.payments, []);
+  const references=new Set(payments.map(payment=>payment.reference));
+  const legacyOrderPayments=readLS(LS.orders, []).filter(order=>
+    order.paymentMethod==="wallet" && order.paymentStatus==="paid from GreenNest wallet" && !references.has(order.id)
+  ).map(order=>({
+    id:"LEGACY-" + order.id,
+    type:"Plant and garden order",
+    reference:order.id,
+    payer:order.customerUsername || "Unknown legacy customer",
+    method:"GreenNest wallet (simulated)",
+    amount:order.total,
+    expertAmount:0,
+    adminAmount:order.total,
+    status:"Received from local order history (simulated)",
+    date:order.date,
+  }));
+  if(legacyOrderPayments.length){
+    const migrated=[...legacyOrderPayments,...payments];
+    writeLS(LS.payments,migrated);
+    return migrated;
+  }
+  return payments;
+}
+function recordPayment(payment){
+  const payments = getPaymentHistory();
+  if(payments.some(entry=>entry.reference === payment.reference)) return;
+  payments.unshift({ ...payment, id:"PAY" + Date.now().toString(36).toUpperCase(), date:new Date().toISOString() });
+  writeLS(LS.payments, payments);
+}
 function isValidEsewaCredentials(esewaId, mpin){
   const walletId = String(esewaId || "").replace(/\D/g, "");
   return /^\d{10}$/.test(walletId) && String(mpin || "") === walletId.slice(0, 4);
@@ -362,7 +393,65 @@ function chargeWallet(senderUsername, receiverUsername, amount, reference){
   wallets[senderUsername] = sender;
   wallets[receiverUsername] = receiver;
   writeLS(LS.wallets, wallets);
+  recordPayment({
+    type:"Plant and garden order",
+    reference,
+    payer:senderUsername,
+    method:"GreenNest wallet (simulated)",
+    amount:value,
+    expertAmount:0,
+    adminAmount:value,
+    status:"Received (simulated)",
+  });
   return { ok:true, senderBalance:sender.balance, receiverBalance:receiver.balance };
+}
+function payForExpertBooking(bookingId){
+  const session = getSession();
+  if(!session || session.role !== "customer") return { ok:false, message:"Sign in as a customer to pay for a booking." };
+  const bookings = getBookings();
+  const booking = bookings.find(item=>item.id === bookingId && item.customerUsername === session.username);
+  if(!booking) return { ok:false, message:"This booking was not found in your account." };
+  if(booking.status !== "Accepted") return { ok:false, message:"Payment is available after the expert accepts your booking." };
+  if(booking.paymentStatus === "Paid via GreenNest wallet (simulated)") return { ok:false, message:"This booking has already been paid." };
+  const expert = EXPERTS.find(item=>item.id === booking.expertId);
+  if(!expert || !Number.isSafeInteger(expert.priceAmount) || expert.priceAmount <= 0) return { ok:false, message:"The expert service price is unavailable." };
+  const total = expert.priceAmount;
+  const adminAmount = Math.round(total * 0.2);
+  const expertAmount = total - adminAmount;
+  const expertUsername = `expert${expert.id}`;
+  const wallets = getWallets();
+  const customerWallet = wallets[session.username] || { balance:0, transactions:[] };
+  if(customerWallet.balance < total){
+    return { ok:false, message:`Insufficient wallet balance. Add NPR ${(total - customerWallet.balance).toLocaleString()} to continue.` };
+  }
+  const adminWallet = wallets[MERCHANT_USERNAME] || { balance:0, transactions:[] };
+  const expertWallet = wallets[expertUsername] || { balance:0, transactions:[] };
+  const reference = booking.id;
+  customerWallet.balance -= total;
+  adminWallet.balance += adminAmount;
+  expertWallet.balance += expertAmount;
+  addWalletTransaction(customerWallet, { type:"debit", amount:total, label:`Expert booking payment · ${expert.name}`, reference });
+  addWalletTransaction(adminWallet, { type:"credit", amount:adminAmount, label:`20% service commission · ${expert.name}`, reference });
+  addWalletTransaction(expertWallet, { type:"credit", amount:expertAmount, label:`80% service payout · ${expert.name}`, reference });
+  wallets[session.username] = customerWallet;
+  wallets[MERCHANT_USERNAME] = adminWallet;
+  wallets[expertUsername] = expertWallet;
+  writeLS(LS.wallets, wallets);
+  recordPayment({
+    type:"Expert service",
+    reference,
+    payer:session.username,
+    recipient:expertUsername,
+    method:"GreenNest wallet (simulated)",
+    amount:total,
+    expertAmount,
+    adminAmount,
+    status:"Received and split (simulated)",
+  });
+  booking.paymentStatus = "Paid via GreenNest wallet (simulated)";
+  booking.paidAt = new Date().toISOString();
+  writeLS(LS.bookings, bookings);
+  return { ok:true, total, expertAmount, adminAmount, customerBalance:customerWallet.balance };
 }
 function getUserOrders(username=getSession()?.username){
   return readLS(LS.orders, []).filter(order=>order.customerUsername === username);
@@ -515,17 +604,40 @@ function getRecommendedProducts(take=4){
     popularity.set(item.id, (popularity.get(item.id) || 0) + item.qty);
   }));
   const categoryCounts = new Map();
+  const relatedScores = new Map();
   mine.forEach(id=>{
     const product = PRODUCTS.find(candidate=>candidate.id===id);
     if(product) categoryCounts.set(product.category, (categoryCounts.get(product.category) || 0) + 1);
+    (product?.relatedIds || []).forEach(relatedId=>{
+      if(!mine.has(relatedId)) relatedScores.set(relatedId, (relatedScores.get(relatedId) || 0) + 30);
+    });
+    if(product?.category === "Plants"){
+      PRODUCTS.filter(candidate=>["Fertilizers", "Pots", "Gardening tools", "Accessories"].includes(candidate.category))
+        .forEach(candidate=>{
+          if(!mine.has(candidate.id)){
+            const weight = candidate.category === "Fertilizers" ? 5 : candidate.category === "Pots" ? 4 : candidate.category === "Gardening tools" ? 3 : 2;
+            relatedScores.set(candidate.id, (relatedScores.get(candidate.id) || 0) + weight);
+          }
+        });
+      const purchasedPlant = product.name.toLowerCase();
+      COMPANIONS.forEach(group=>{
+        const matchesGroup = group.set.some(name=>purchasedPlant.startsWith(name.toLowerCase()));
+        if(!matchesGroup) return;
+        PRODUCTS.filter(candidate=>candidate.id !== product.id && group.set.some(name=>candidate.name.toLowerCase().startsWith(name.toLowerCase())))
+          .forEach(candidate=>{
+            if(!mine.has(candidate.id)) relatedScores.set(candidate.id, (relatedScores.get(candidate.id) || 0) + 20);
+          });
+      });
+    }
   });
 
   return PRODUCTS
     .filter(product=>!mine.has(product.id))
     .map((product,index)=>({
       product,
-      score:(scores.get(product.id) || 0) * 100 + (categoryCounts.get(product.category) || 0) * 2
-        + (popularity.get(product.id) || 0) + (PRODUCTS.length-index) / 1000,
+      score:(relatedScores.get(product.id) || 0) + (scores.get(product.id) || 0) * 100
+        + (categoryCounts.get(product.category) || 0) * 2 + (popularity.get(product.id) || 0)
+        + (PRODUCTS.length-index) / 1000,
     }))
     .sort((a,b)=>b.score-a.score)
     .slice(0, Math.max(0, take))
@@ -565,6 +677,7 @@ function addBooking(booking){
   const bookings = getBookings();
   booking.id = "BK" + Date.now().toString().slice(-8);
   booking.status = "Pending confirmation";
+  booking.paymentStatus = "Unpaid — awaiting expert acceptance";
   const storedBooking = { ...booking };
   delete storedBooking.customerEmail;
   delete storedBooking.customerName;
@@ -574,13 +687,23 @@ function addBooking(booking){
   return booking;
 }
 function cancelBooking(bookingId){
-  writeLS(LS.bookings, getBookings().filter(b=>b.id!==bookingId));
+  const bookings = getBookings();
+  const booking = bookings.find(item=>item.id === bookingId);
+  if(booking && booking.paymentStatus === "Paid via GreenNest wallet (simulated)"){
+    return { ok:false, message:"Paid bookings cannot be cancelled here. Contact GreenNest support to review a refund." };
+  }
+  writeLS(LS.bookings, bookings.filter(b=>b.id!==bookingId));
+  return { ok:true };
 }
 function updateBookingStatus(bookingId, status){
   const bookings = getBookings();
   const b = bookings.find(x=>x.id===bookingId);
+  if(b?.paymentStatus === "Paid via GreenNest wallet (simulated)" && status === "Rejected"){
+    return { ok:false, message:"A paid booking cannot be rejected here. Contact the customer and GreenNest support to review a refund." };
+  }
   if(b) b.status = status;
   writeLS(LS.bookings, bookings);
+  return { ok:true };
 }
 async function getEmailApiBase(){
   if(!["5500", "5501"].includes(window.location.port)) return "";

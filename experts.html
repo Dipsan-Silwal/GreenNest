@@ -109,6 +109,7 @@
         </select>
       </div>
       <div class="field"><label>What do you need help with?</label><textarea id="book-note" placeholder="e.g. Rooftop container garden setup, ~15 pots"></textarea><small>Describe the gardening work only; do not include contact or payment details.</small></div>
+      <p style="padding:12px 14px;background:var(--clay);border-radius:10px;font-size:13px;line-height:1.55;">Payment is due only after the expert accepts. Pay from your GreenNest wallet; this local simulation splits the service price 80% to the expert and 20% to GreenNest. No external payment is processed.</p>
       <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:20px;">Confirm booking request</button>
     </form>
   </div>
@@ -200,13 +201,28 @@
         <div>
           <div style="font-weight:600;">${b.expertName} — ${b.specialty}</div>
           <div style="font-size:12.5px; color:rgba(22,48,42,.55);">${b.date}${b.note ? " · " + b.note : ""}</div>
+          <small>${b.paymentStatus || "Unpaid — awaiting expert acceptance"}</small>
         </div>
         <div>
           <span class="bk-status">${b.status}</span>
-          <button class="bk-cancel" onclick="cancelBooking('${b.id}'); renderMyBookings();">Cancel</button>
+          ${b.status==="Accepted" && b.paymentStatus!=="Paid via GreenNest wallet (simulated)" ? `<button class="btn btn-primary btn-sm" onclick="payForBooking('${b.id}')">Pay from wallet · NPR ${(EXPERTS.find(e=>e.id===b.expertId)?.priceAmount || 0).toLocaleString()}</button>` : ""}
+          ${["Pending confirmation","Rejected"].includes(b.status) ? `<button class="bk-cancel" onclick="cancelMyBooking('${b.id}')">Cancel</button>` : ""}
         </div>
       </div>
     `).join("");
+  }
+
+  function payForBooking(bookingId){
+    const result=payForExpertBooking(bookingId);
+    if(!result.ok){toast(result.message);return;}
+    toast(`Paid NPR ${result.total.toLocaleString()}: NPR ${result.expertAmount.toLocaleString()} to the expert and NPR ${result.adminAmount.toLocaleString()} to GreenNest.`);
+    renderMyBookings();
+  }
+
+  function cancelMyBooking(bookingId){
+    const result=cancelBooking(bookingId);
+    if(!result.ok){toast(result.message);return;}
+    renderMyBookings();
   }
 
   renderExperts();

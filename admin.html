@@ -58,6 +58,7 @@
   .admin-wallet input{ min-width:0; border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:9px; background:rgba(255,255,255,.1); color:#fff; }
   .admin-wallet input::placeholder{ color:rgba(255,255,255,.6); }
   @media (max-width:700px){ .admin-wallet form{ grid-template-columns:1fr; } }
+  .payment-disclaimer{font-size:12px;color:rgba(22,48,42,.6);margin:-18px 0 24px;}
 
   @media (max-width:860px){
     .admin-shell{ grid-template-columns:1fr; }
@@ -79,6 +80,7 @@
     <a class="side-link" data-view="experts" onclick="setAdminTab('experts')">🧑‍🌾 Experts</a>
     <a class="side-link" data-view="appointments" onclick="setAdminTab('appointments')">📅 Appointments</a>
     <a class="side-link" data-view="orders" onclick="setAdminTab('orders')">🛒 Orders</a>
+    <a class="side-link" data-view="payments" onclick="setAdminTab('payments')">💰 Payments</a>
     <a class="side-link" data-view="reports" onclick="setAdminTab('reports')">📄 Reports</a>
     <div class="side-foot">
       <a href="index.html">← Exit to customer site</a>
@@ -101,6 +103,7 @@
       <div class="kpi"><div class="n" id="kpi-bookings">0</div><div class="l">Total bookings</div></div>
       <div class="kpi"><div class="n" id="kpi-orders">0</div><div class="l">Orders placed</div></div>
       <div class="kpi"><div class="n" id="kpi-revenue">NPR 0</div><div class="l">Total order value</div></div>
+      <div class="kpi"><div class="n" id="kpi-received">NPR 0</div><div class="l">Wallet payments received · simulated</div></div>
     </div>
 
     <!-- OVERVIEW -->
@@ -115,6 +118,7 @@
           <button class="btn btn-gold btn-sm" type="submit">Load with eSewa</button>
         </form>
         <div id="admin-wallet-message" style="font-size:12px;color:var(--sage);margin-top:8px;">GreenNest wallet payments are credited here.</div>
+        <div style="font-size:11px;color:var(--sage);margin-top:6px;">Local simulation only; no external money or eSewa transaction is processed.</div>
       </div>
       <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Recent activity</h2></div>
       <div class="table-wrap">
@@ -163,7 +167,7 @@
       <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Manage appointments &amp; reminders</h2></div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Booking ID</th><th>Expert</th><th>Date</th><th>Status</th></tr></thead>
+          <thead><tr><th>Booking ID</th><th>Expert</th><th>Date</th><th>Booking status</th><th>Payment status</th></tr></thead>
           <tbody id="appointments-body"></tbody>
         </table>
       </div>
@@ -176,6 +180,17 @@
         <table class="data-table">
           <thead><tr><th>Order ID</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th></tr></thead>
           <tbody id="orders-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="admin-view" id="view-payments">
+      <div class="section-head" style="margin-bottom:8px;"><h2 style="font-size:19px;">Payment history</h2></div>
+      <p class="payment-disclaimer">Simulated GreenNest wallet receipts on this browser only. Cash-on-delivery orders remain due until collected; simulated card orders are not recorded as received.</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Paid by</th><th>Payment</th><th>Reference</th><th>Method</th><th>Total</th><th>Expert 80%</th><th>GreenNest 20%</th><th>Status</th></tr></thead>
+          <tbody id="payments-body"></tbody>
         </table>
       </div>
     </div>
@@ -194,6 +209,10 @@
       <div class="report-card">
         <div><div class="rt">Bookings Report</div><div class="rd">All expert booking requests and their current status.</div></div>
         <button class="btn btn-primary btn-sm" onclick="exportBookings()">Download CSV</button>
+      </div>
+      <div class="report-card">
+        <div><div class="rt">Payment History Report</div><div class="rd">Simulated receipts with payer, method, and expert/admin allocation.</div></div>
+        <button class="btn btn-primary btn-sm" onclick="exportPayments()">Download CSV</button>
       </div>
     </div>
   </main>
@@ -214,12 +233,14 @@
     const orders = readLS(LS.orders, []);
     const bookings = getBookings();
     const revenue = orders.reduce((s,o)=>s+o.total,0);
+    const received = getPaymentHistory().reduce((sum,payment)=>sum+payment.amount,0);
     document.getElementById("kpi-products").textContent = PRODUCTS.length;
     document.getElementById("kpi-lowstock").textContent = PRODUCTS.filter(p=>p.stock<10).length;
     document.getElementById("kpi-experts").textContent = EXPERTS.length;
     document.getElementById("kpi-bookings").textContent = bookings.length;
     document.getElementById("kpi-orders").textContent = orders.length;
     document.getElementById("kpi-revenue").textContent = "NPR " + revenue.toLocaleString();
+    document.getElementById("kpi-received").textContent = "NPR " + received.toLocaleString();
     document.getElementById("admin-wallet-balance").textContent = "NPR " + getWalletBalance("admin").toLocaleString();
   }
 
@@ -234,7 +255,8 @@
   function renderActivity(){
     const orders = readLS(LS.orders, []).map(o=>({type:"Order", detail:`${o.id} · NPR ${o.total.toLocaleString()}`, date:o.date}));
     const bookings = getBookings().map(b=>({type:"Booking", detail:`${b.expertName} · ${b.status}`, date: b.id ? new Date(parseInt(b.id.replace('BK',''))||Date.now()).toISOString() : new Date().toISOString()}));
-    const all = [...orders, ...bookings].sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,12);
+    const payments = getPaymentHistory().map(payment=>({type:"Payment", detail:`${payment.payer} · ${payment.method} · NPR ${payment.amount.toLocaleString()}`,date:payment.date}));
+    const all = [...orders, ...bookings, ...payments].sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,12);
     const body = document.getElementById("activity-body");
     body.innerHTML = all.length ? all.map(a=>`<tr><td>${a.type}</td><td>${a.detail}</td><td>${new Date(a.date).toLocaleString()}</td></tr>`).join("")
       : `<tr><td colspan="3" style="text-align:center; color:rgba(22,48,42,.5); padding:30px;">No activity yet — place an order or booking from the customer site.</td></tr>`;
@@ -291,8 +313,9 @@
         <td>${b.expertName}</td>
         <td>${b.date}</td>
         <td>${b.status}</td>
+        <td>${b.paymentStatus || "Unpaid — awaiting expert acceptance"}</td>
       </tr>
-    `).join("") : `<tr><td colspan="4" style="text-align:center; color:rgba(22,48,42,.5); padding:30px;">No appointments yet.</td></tr>`;
+    `).join("") : `<tr><td colspan="5" style="text-align:center; color:rgba(22,48,42,.5); padding:30px;">No appointments yet.</td></tr>`;
   }
 
   function renderOrders(){
@@ -307,6 +330,22 @@
         <td>${new Date(o.date).toLocaleDateString()}</td>
       </tr>
     `).join("") : `<tr><td colspan="6" style="text-align:center; color:rgba(22,48,42,.5); padding:30px;">No orders yet.</td></tr>`;
+  }
+
+  function renderPayments(){
+    const payments=getPaymentHistory();
+    document.getElementById("payments-body").innerHTML=payments.length ? payments.map(payment=>`
+      <tr>
+        <td>${new Date(payment.date).toLocaleString()}</td>
+        <td>${payment.payer}</td>
+        <td>${payment.type}</td>
+        <td>${payment.reference}</td>
+        <td>${payment.method}</td>
+        <td>NPR ${payment.amount.toLocaleString()}</td>
+        <td>NPR ${(payment.expertAmount || 0).toLocaleString()}</td>
+        <td>NPR ${(payment.adminAmount || 0).toLocaleString()}</td>
+        <td>${payment.status}</td>
+      </tr>`).join("") : `<tr><td colspan="9" style="text-align:center;color:rgba(22,48,42,.5);padding:30px;">No wallet payments received yet.</td></tr>`;
   }
 
   function exportProducts(){
@@ -326,6 +365,12 @@
     downloadCSV("greennest_bookings.csv", rows);
     toast("Bookings report downloaded");
   }
+  function exportPayments(){
+    const payments=getPaymentHistory();
+    const rows=[["Date","Payer","Type","Reference","Method","Amount NPR","Expert NPR","GreenNest NPR","Status"],...payments.map(payment=>[payment.date,payment.payer,payment.type,payment.reference,payment.method,payment.amount,payment.expertAmount || 0,payment.adminAmount || 0,payment.status])];
+    downloadCSV("greennest_payment_history.csv",rows);
+    toast("Payment history report downloaded");
+  }
 
   renderKPIs();
   renderActivity();
@@ -334,6 +379,7 @@
   renderExperts();
   renderAppointments();
   renderOrders();
+  renderPayments();
 </script>
 </body>
 </html>
