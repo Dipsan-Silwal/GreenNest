@@ -3,12 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shop — GreenNest</title>
-<meta name="description" content="Shop plants, seeds, fertilizers, pots and gardening tools at GreenNest Nepal. Browse indoor, outdoor, rooftop and balcony garden products.">
+<title>Buy Plants &amp; Gardening Supplies in Nepal | GreenNest</title>
+<meta name="description" content="Buy indoor plants, seeds, pots, fertilizers and gardening tools in Nepal. Explore 21 products for balcony, rooftop, outdoor and home gardens at the GreenNest online shop.">
 <meta name="keywords" content="shop plants Nepal, buy seeds Nepal, gardening tools Kathmandu, indoor plants, fertilizers, pots, GreenNest shop">
 <meta property="og:title" content="Shop Plants &amp; Gardening Supplies — GreenNest">
 <meta property="og:description" content="Browse plants, seeds, pots, fertilizers and garden tools for every space.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="/shop.html">
+<meta property="og:image" content="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&amp;fit=crop&amp;w=1200&amp;h=630&amp;q=80">
+<meta property="og:image:alt" content="Plants and gardening supplies for home gardens">
+<meta property="og:locale" content="en_NP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Buy Plants &amp; Gardening Supplies in Nepal | GreenNest">
+<meta name="twitter:description" content="Buy indoor plants, seeds, pots, fertilizers and gardening tools in Nepal.">
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&amp;fit=crop&amp;w=1200&amp;h=630&amp;q=80">
+<meta name="twitter:image:alt" content="Plants and gardening supplies for home gardens">
+<link rel="canonical" href="/shop.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -53,19 +63,19 @@
   .recommendation-card h3{ font-size:15px; margin:10px 0 4px; }
   .recommendation-card .rec-price{ font-weight:700; color:var(--forest); margin-bottom:8px; }
   #greennest-ad{ margin:20px 0; }
-  .marketing-demo{ margin:0 0 24px; padding:18px; border:1px solid var(--line); border-radius:18px; background:#fff; }
-  .marketing-demo h2{ font:600 20px 'Fraunces',serif; margin-bottom:6px; }
-  .marketing-demo-intro{ font-size:12px; color:rgba(22,48,42,.68); margin-bottom:12px; }
-  .marketing-demo-tools{ display:grid; gap:8px; }
+  .marketing-integrations{ margin:0 0 24px; padding:18px; border:1px solid var(--line); border-radius:18px; background:#fff; }
+  .marketing-integrations h2{ font:600 20px 'Fraunces',serif; margin-bottom:6px; }
+  .marketing-integrations-intro{ font-size:12px; color:rgba(22,48,42,.68); margin-bottom:12px; }
+  .marketing-integration-tools{ display:grid; gap:8px; }
   .marketing-tool{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 12px; background:var(--paper); border-radius:10px; }
   .marketing-tool strong,.marketing-tool code{ display:block; }
   .marketing-tool strong{ font-size:13px; }
   .marketing-tool code{ margin-top:3px; font-size:11px; overflow-wrap:anywhere; }
   .marketing-status{ flex-shrink:0; font-size:11px; font-weight:700; color:var(--moss); }
-  .marketing-demo-events{ margin:10px 0 0; padding-left:20px; font-size:12px; }
-  .marketing-demo-events li{ padding:3px 0; }
-  .marketing-demo-events time{ margin-left:10px; color:rgba(22,48,42,.55); }
-  .demo-ad{ margin-top:14px; padding:12px; border:1px dashed rgba(22,48,42,.3); border-radius:10px; color:rgba(22,48,42,.62); font-size:12px; }
+  .marketing-activity{ margin:10px 0 0; padding-left:20px; font-size:12px; }
+  .marketing-activity li{ padding:3px 0; }
+  .marketing-activity time{ margin-left:10px; color:rgba(22,48,42,.55); }
+  .ad-placeholder{ margin-top:14px; padding:12px; border:1px dashed rgba(22,48,42,.3); border-radius:10px; color:rgba(22,48,42,.62); font-size:12px; }
   @media (max-width:820px){
     .shop-layout{ grid-template-columns:1fr; }
   }
@@ -95,34 +105,35 @@
 <section class="page-hero">
   <div class="wrap">
     <div class="eyebrow on-dark">Marketplace</div>
-    <h1>Shop plants &amp; supplies</h1>
+    <h1>Buy Plants &amp; Gardening Supplies in Nepal</h1>
     <p>Everything for indoor, outdoor, rooftop, balcony and landscaping gardens — 21 products across 6 categories.</p>
   </div>
 </section>
 
 <section>
   <div class="wrap">
+    <h2>Browse plants and supplies for your garden</h2>
     <div class="shop-layout">
       <aside>
         <div class="searchbar"><input type="text" id="search-input" placeholder="Search products…"></div>
         <div class="filter-group">
-          <h4>Category</h4>
+          <h3>Category</h3>
           <div class="filter-list" id="cat-filters"></div>
         </div>
         <div class="filter-group">
-          <h4>Environment</h4>
+          <h3>Garden environment</h3>
           <div class="filter-list" id="env-filters"></div>
         </div>
       </aside>
       <div>
         <div class="result-count" id="result-count"></div>
-        <section class="marketing-demo" id="marketing-demo-panel" aria-labelledby="marketing-demo-title">
-          <h2 id="marketing-demo-title">Digital marketing tools — demo</h2>
-          <p class="marketing-demo-intro">Example IDs below are deliberately fake. Events are shown locally in this browser and are not sent to Google or Meta unless you add your own real IDs in <code>js/tracking-config.js</code>.</p>
-          <div class="marketing-demo-tools" id="marketing-demo-tools"></div>
-          <h3 style="font-size:14px; margin:14px 0 4px;">Recent demo events</h3>
-          <ul class="marketing-demo-events" id="marketing-demo-events" aria-live="polite"></ul>
-          <div class="demo-ad"><strong>Demo AdSense placement</strong> — sample placeholder only; no ad is served and no ad impression is reported.</div>
+        <section class="marketing-integrations" id="marketing-integration-panel" aria-labelledby="marketing-integration-title">
+          <h2 id="marketing-integration-title">Marketing integrations</h2>
+          <p class="marketing-integrations-intro">The identifiers below are placeholders. Activity stays in this browser and is not sent to Google or Meta until you configure your own provider IDs in <code>js/tracking-config.js</code>.</p>
+          <div class="marketing-integration-tools" id="marketing-integration-tools"></div>
+          <h3 style="font-size:14px; margin:14px 0 4px;">Recent activity</h3>
+          <ul class="marketing-activity" id="marketing-activity" aria-live="polite"></ul>
+          <div class="ad-placeholder"><strong>Ad placement</strong> — not configured; no ad is served or impression reported.</div>
         </section>
         <section class="recommendations" id="recommendations" aria-labelledby="recommendations-title" hidden>
           <h2 id="recommendations-title">Picked for your garden</h2>
@@ -202,7 +213,7 @@
         </div>
         <div class="p-body">
           <div class="p-cat">${p.category}</div>
-          <div class="p-name">${p.name}</div>
+          <h3 class="p-name">${p.name}</h3>
           <div class="p-desc">${p.desc}</div>
           <div class="p-foot">
             <span class="p-price">NPR ${p.price}</span>
@@ -222,7 +233,7 @@
     if(!recommendations.length) return;
     section.hidden = false;
     document.getElementById("recommendations-copy").textContent = getUserOrders().length
-      ? "Suggestions use your order history and patterns in purchases from this demo browser."
+      ? "Suggestions use your order history and purchase patterns saved in this browser."
       : "Starter picks from the GreenNest catalog. Suggestions will personalize after your first order.";
     grid.innerHTML = recommendations.map(p=>`
       <article class="recommendation-card" data-product-id="${p.id}" data-list-name="Purchase recommendations">

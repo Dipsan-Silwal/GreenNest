@@ -1,20 +1,99 @@
 # GreenNest — Smart Gardening E-Commerce & Plant Care Management System
 
-A working demo web app built from the GreenNest project proposal (Dipsan Silwal, Dept. of CSIT, Tribhuvan University).
+A working prototype web app built from the GreenNest project proposal (Dipsan Silwal, Dept. of CSIT, Tribhuvan University).
 Plain HTML/CSS/JavaScript with a small Node.js email backend.
 
 ## How to run it
 
 1. Install Node.js 18 or newer.
-2. Run `npm install` in this folder.
-3. Copy `.env.example` to `.env` and fill in `GMAIL_APP_PASSWORD` with a Google App Password for `deeplight200@gmail.com`.
-4. Run `npm start` and open `http://localhost:3000`.
-5. Click through the nav: **Home → Shop → Plant Quiz → Companion Planner → Dashboard → Experts**.
-6. Use the **"Customer view ▾"** switcher in the top-right of the nav to jump to the **Expert Panel** or **Admin Panel**.
+2. In PowerShell, open this project folder and run:
 
-State (cart, wishlist, plants, journal, orders, bookings) is saved in the browser's local storage, so it survives page reloads. Booking confirmation emails are sent by the Node.js backend through Gmail: the customer receives a confirmation and `deeplight200@gmail.com` receives the booking notification.
+   ```powershell
+   Copy-Item .env.example .env
+   npm.cmd install
+   npm.cmd start
+   ```
 
-For Gmail, enable 2-Step Verification and create an App Password. Do not put the normal Gmail password in `.env` or commit `.env` to source control.
+   Using `npm.cmd` avoids PowerShell script-execution-policy errors with `npm.ps1`. Open `http://localhost:3000`. HTTPS is optional for local development; see [Local HTTPS (TLS)](#local-https-tls).
+3. Sign in with one of the sample accounts below. The admin account opens the **Admin Panel**, expert accounts open the **Expert Panel**, and customer accounts open the homepage.
+4. After signing in, click through the nav: **Home → Shop → Plant Quiz → Companion Planner → Dashboard → Experts**.
+
+### Sample sign-in accounts
+
+- **Admin:** `admin` / `admin` (the only admin account)
+- **Customers:** `customer1` / `customer1` through `customer5` / `customer5`
+- **Experts:** `expert1` / `expert1` through `expert6` / `expert6`
+
+Each customer and expert has separate browser-stored account data. The account number matches the customer or expert profile shown after sign-in.
+
+State (cart, wishlist, plants, journal, orders, bookings) is saved in the browser's local storage, so it survives page reloads. Order delivery details are sent for confirmation but are not retained in the local order history; customer booking email and name are also excluded from saved bookings. Booking service notes are retained for the expert workflow, so enter gardening requirements only—not contact, payment, or other private details. Local storage remains readable to browser scripts and the device user; the built-in accounts and browser-stored app data are for local evaluation only and must not be used for real customer accounts. To enable booking and order confirmation emails, set `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and `ADMIN_EMAIL` in `.env`. Configure a Google App Password for the Gmail account; email is optional for running the rest of the local app.
+
+Never put a normal Gmail password in `.env`, and never commit `.env`, TLS private keys, or real credentials.
+
+### Local HTTPS (TLS)
+
+The Express server uses HTTP by default. To test HTTPS locally with a trusted development certificate:
+
+1. Install [mkcert](https://github.com/FiloSottile/mkcert) on your development machine and open a new terminal.
+2. From the project folder, create a local certificate. The private certificate authority is trusted on this machine only:
+
+   ```powershell
+   New-Item -ItemType Directory -Force .certs
+   mkcert -install
+   mkcert -key-file .certs/localhost-key.pem -cert-file .certs/localhost.pem localhost 127.0.0.1 ::1
+   ```
+
+3. Set these paths in your ignored `.env` file:
+
+   ```dotenv
+   TLS_CERT_PATH=.certs/localhost.pem
+   TLS_KEY_PATH=.certs/localhost-key.pem
+   ```
+
+4. Run `npm.cmd start` and open `https://localhost:3000`. Leave both TLS variables unset to return to HTTP. The app requires both paths together.
+
+To serve the full GreenNest app at `https://127.0.0.1:5500/`, stop Live Server and run this from the project folder after creating the certificate:
+
+```powershell
+$env:PORT = "5500"
+$env:HOST = "127.0.0.1"
+$env:SITE_URL = "https://127.0.0.1:5500"
+$env:TLS_CERT_PATH = ".certs\localhost.pem"
+$env:TLS_KEY_PATH = ".certs\localhost-key.pem"
+npm.cmd start
+```
+
+These environment variables apply only to that PowerShell window. To keep this setup between sessions, put the same values in your ignored `.env` file instead. Do not run Live Server and the Express app on the same port.
+
+### Use HTTPS with VS Code Live Server
+
+Live Server is separate from the Express server above. If you need the static preview too, use port `5501` so it does not conflict with GreenNest on `5500`. After creating the trusted certificate, add this workspace setting to `.vscode/settings.json`, replacing the certificate paths with their full paths on your computer:
+
+```json
+{
+  "liveServer.settings.port": 5501,
+  "liveServer.settings.https": {
+    "enable": true,
+    "cert": "C:\\path\\to\\GreenNest\\.certs\\localhost.pem",
+    "key": "C:\\path\\to\\GreenNest\\.certs\\localhost-key.pem",
+    "passphrase": ""
+  }
+}
+```
+
+The workspace settings file is intentionally ignored by Git because certificate paths are machine-specific. Restart Live Server from the VS Code Command Palette, then open `https://127.0.0.1:5501/`. The mkcert certificate is trusted only on the machine where `mkcert -install` was run.
+
+To keep booking and order emails working from the HTTPS Live Server page, also enable TLS for the Express server on port `3000` with `TLS_CERT_PATH` and `TLS_KEY_PATH` in `.env`, then run `npm.cmd start`. The page will use that HTTPS API.
+
+For production, use your hosting platform or reverse proxy to obtain, renew, and terminate a publicly trusted TLS certificate. Set `NODE_ENV=production` and `SITE_URL=https://your-real-domain.example` (replace this with your real origin, without a path) in the deployment environment. Production startup intentionally fails if `SITE_URL` is absent or not HTTPS. Do not upload the local `.certs` files or use a self-signed development certificate for a public website. If TLS terminates at a reverse proxy, configure the real public `SITE_URL` there; the app uses it for canonical URLs, Open Graph URLs, `robots.txt`, and the XML sitemap.
+
+### Search engine setup
+
+- The public homepage, shop, plant quiz, companion planner, and experts pages have distinct search titles and descriptions, one descriptive H1, and meaningful H2/H3 section headings.
+- The server emits absolute canonical and Open Graph URLs for those public pages, plus WebSite Schema.org JSON-LD on the homepage.
+- `https://your-real-domain.example/robots.txt` and `/sitemap.xml` are generated by the Node server. In development, `robots.txt` blocks indexing; in production, configure `SITE_URL` so it can publish the real sitemap URL.
+- Login, dashboard, checkout, admin, and expert-panel pages are marked `noindex` and intentionally omitted from the sitemap.
+- Re-run the SEO audit against the deployed HTTPS domain after setting `SITE_URL`. Localhost addresses are not public crawl targets. Analytics is optional and remains disabled until you configure your own IDs and consent requirements.
 
 ## Pages
 
@@ -37,12 +116,13 @@ For Gmail, enable 2-Step Verification and create an App Password. Do not put the
 - **Companion Planner** — real compatibility logic (good/bad pairings) and season-based filtering
 - **Weather reminders** — calls the free [Open-Meteo](https://open-meteo.com) API live, using your browser's geolocation (falls back to Kathmandu), and generates watering/heat/rain alerts from the actual forecast
 - **Growth journal** — add plants, log care notes, see a visual timeline of activity
-- **Expert bookings** — a booking form writes into local storage; the **Expert Panel** reads the same data and lets you accept/reject it, so you can demo the full request → response loop
+- **Expert bookings** — a booking form writes into local storage; the **Expert Panel** reads the same data and lets you accept/reject it, completing the request → response loop
 - **Admin reports** — the Reports tab exports real CSV files (products, orders, bookings) generated from live app state
-- **Purchase recommendations** — the shop uses user-based collaborative filtering over demo orders stored in this browser, with category/catalog fallback for new customers
+- **Purchase recommendations** — the shop uses user-based collaborative filtering over orders stored in this browser, with category/catalog fallback for new customers
 - **Analytics hooks** — optional GA4 and Meta Pixel page views, product-list impressions, clicks, cart/checkout funnel, purchases and consultation leads; blank IDs disable third-party requests
-- **Marketing demo panel** — the shop shows unmistakably fake provider IDs and a local-only event list to demonstrate the integration without sending sample activity to third parties
-- **Order fingerprint demo** — the approval screen displays a browser-generated SHA-256 hash of the order ID, total, timestamp and product IDs/quantities. This is a demonstration fingerprint only; checkout is simulated and the hash does not secure, verify or authenticate a payment.
+- **Marketing integration panel** — the shop shows placeholder provider IDs and a local-only event list. Activity is not sent to third parties unless you configure provider IDs.
+- **Order fingerprint preview** — the order screen displays a browser-generated SHA-256 hash of the order ID, total, timestamp and product IDs/quantities. This informational fingerprint does not secure, verify or authenticate a payment.
+- **Checkout** — cash on delivery and the GreenNest wallet place orders. Card fields are validated locally only; card authorization is simulated, no charge is taken, and card details are not stored or transmitted.
 
 ## How to customize / re-edit
 
@@ -53,13 +133,13 @@ Everything is organized so a specific change lives in one obvious place:
 - **Cart / wishlist / booking logic** → `js/main.js`. All shared behavior (add to cart, toggle wishlist, place order, book an expert) lives here so it's consistent across pages.
 - **Page-specific layout/behavior** → each `.html` file has its own `<style>` block (page-only CSS) and `<script>` block (page-only logic) near the bottom, clearly separated from the shared files.
 - **Responsive layout** → grids use `repeat(auto-fit, minmax(...))` instead of fixed column counts, so cards reflow naturally at any window width without needing extra breakpoints. If you add a new grid, follow the same pattern (see `.product-grid`, `.expert-grid`, etc. for examples).
-- **Analytics / AdSense** → set `ga4Id`, `metaPixelId`, `adsenseClient` and `adsenseSlot` in `js/tracking-config.js`. Use IDs from your own accounts; the blank defaults keep third-party tracking disabled. AdSense test mode is enabled in the demo placement. GA4 records page views, clicks, product impressions, checkout steps, purchases and consultation leads; localhost sessions use GA4 debug mode for DebugView. Bounce rate is available in GA4 Reports after traffic arrives.
-- **Marketing demo panel** → the shop page displays fake `DEMO-...` IDs and locally stored event names for presentation. These are not real provider IDs; no Google, Meta or AdSense scripts load while the actual ID fields are blank.
+- **Analytics / AdSense** → set `ga4Id`, `metaPixelId`, `adsenseClient` and `adsenseSlot` in `js/tracking-config.js`. Use IDs from your own accounts; the blank defaults keep third-party tracking disabled. AdSense test mode is enabled until you configure a publisher client and ad slot. GA4 records page views, clicks, product impressions, checkout steps, purchases and consultation leads; localhost sessions use GA4 debug mode for DebugView. Bounce rate is available in GA4 Reports after traffic arrives.
+- **Marketing integration panel** → the shop page displays `PLACEHOLDER-...` IDs and locally stored event names. These are not real provider IDs; no Google, Meta or AdSense scripts load while the actual ID fields are blank.
 - **On-page SEO** → public pages have page-specific titles, descriptions, keywords and social-sharing metadata in each HTML `<head>`. Account and checkout pages are marked `noindex`.
 
 ## Honest scope notes
 
-Booking email delivery now uses the Node.js backend and Gmail SMTP. Other application data still lives in the browser via `localStorage` instead of a database, so collaborative filtering sees only orders made in the same browser; it needs different demo shoppers' histories in that browser to find similar buyers. New shoppers see starter catalog recommendations until purchase history is available. The Customer, Expert, and Admin modules remain a local demo, and checkout payments are simulated. Real analytics/ad reporting requires valid account IDs; AdSense also requires publisher approval and a configured ad unit/domain. Add an appropriate consent flow and privacy notice before enabling third-party tracking for real visitors.
+Booking email delivery uses the Node.js backend and Gmail SMTP. Other application data still lives in the browser via `localStorage` instead of a database, so collaborative filtering sees only orders made in the same browser; it needs multiple shoppers' histories in that browser to find similar buyers. New shoppers see starter catalog recommendations until purchase history is available. The Customer, Expert, and Admin modules remain local prototypes. Card authorization is simulated and no funds are collected; real card processing requires a payment provider and server-side integration. Real analytics/ad reporting requires valid account IDs; AdSense also requires publisher approval and a configured ad unit/domain. Add an appropriate consent flow and privacy notice before enabling third-party tracking for real visitors.
 
 ## Tech used
 
@@ -82,8 +162,9 @@ GreenNest/
 ├── js/
 │   ├── data.js              Sample products, experts, companion/season data
 │   └── main.js               Shared cart / wishlist / journal / booking logic
-├── server.js                 Gmail booking email API and static file server
+├── server.js                 Email API, SEO routes, optional TLS and static file server
 ├── package.json              Backend dependencies and start script
-├── .env.example              Gmail configuration template
+├── package-lock.json         Reproducible npm dependency versions
+├── .env.example              Email and local server configuration template
 └── README.md
 ```

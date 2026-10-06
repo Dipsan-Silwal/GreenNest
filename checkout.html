@@ -3,248 +3,168 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checkout — GreenNest</title>
-<meta name="description" content="Review your GreenNest order and complete the demo checkout for plants and gardening supplies in Nepal.">
-<meta name="keywords" content="GreenNest checkout, plant order Nepal, gardening supplies">
 <meta name="robots" content="noindex, nofollow">
+<title>Secure Checkout | GreenNest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <style>
-  .checkout-grid{ display:grid; grid-template-columns:1fr 380px; gap:28px; align-items:start; }
-  @media (max-width:880px){ .checkout-grid{ grid-template-columns:1fr; } }
-
-  .co-steps{ display:flex; gap:10px; margin-bottom:28px; font-family:'Space Mono',monospace; font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; color:rgba(22,48,42,.4); }
-  .co-steps .step.active{ color:var(--forest); font-weight:700; }
-  .co-steps .step:not(:last-child)::after{ content:'→'; margin-left:10px; color:rgba(22,48,42,.25); }
-
-  .co-view{ display:none; }
-  .co-view.active{ display:block; }
-
-  .summary-row{ display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); align-items:center; }
-  .summary-row:last-of-type{ border-bottom:none; }
-  .summary-row .thumb{ width:44px; height:44px; border-radius:10px; flex-shrink:0; overflow:hidden; }
-  .summary-row .thumb img{ width:100%; height:100%; object-fit:cover; }
-  .summary-row .info{ flex:1; }
-  .summary-row .info .name{ font-size:13.5px; font-weight:600; }
-  .summary-row .info .qty{ font-size:12px; color:rgba(22,48,42,.55); margin-top:2px; }
-  .summary-row .amt{ font-size:13.5px; font-weight:600; }
-  .summary-total{ display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:16px; border-top:1.5px solid var(--line); font-size:16px; font-weight:700; }
-
-  .card-preview{ background:linear-gradient(135deg, var(--forest), #214837); border-radius:16px; padding:22px 24px; color:#fff; margin-bottom:22px; position:relative; overflow:hidden; }
-  .card-preview::after{ content:''; position:absolute; right:-30px; top:-30px; width:140px; height:140px; border-radius:50%; background:rgba(217,164,72,.18); }
-  .card-preview .cnum{ font-family:'Space Mono',monospace; font-size:17px; letter-spacing:.12em; margin:22px 0 16px; }
-  .card-preview .crow{ display:flex; justify-content:space-between; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--sage); }
-  .card-preview .crow b{ display:block; font-size:12.5px; color:#fff; letter-spacing:.02em; text-transform:none; margin-top:3px; }
-
-  .pay-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  .test-hint{ font-size:11.5px; color:rgba(22,48,42,.5); margin-top:14px; line-height:1.6; }
-  .test-hint code{ background:var(--clay); padding:2px 6px; border-radius:5px; font-family:'Space Mono',monospace; }
-
-  .field-error{ font-size:11.5px; color:var(--danger); margin-top:4px; display:none; }
-  .field-error.show{ display:block; }
-
-  .result-shell{ text-align:center; padding:30px 10px; }
-  .result-icon{ width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:32px; }
-  .result-icon.ok{ background:#EAF3EA; color:var(--success); }
-  .result-icon.fail{ background:#FBEDE8; color:var(--danger); }
-  .result-shell h2{ font-size:24px; margin-bottom:8px; }
-  .result-shell p{ color:rgba(22,48,42,.62); font-size:14px; max-width:380px; margin:0 auto; }
-  .result-meta{ margin-top:22px; display:inline-block; text-align:left; background:var(--clay); border-radius:12px; padding:16px 20px; font-size:13px; }
-  .result-meta div{ display:flex; justify-content:space-between; gap:30px; padding:4px 0; }
-  .order-fingerprint{ margin:18px auto 0; max-width:600px; padding:14px 16px; border:1px solid var(--line); border-radius:12px; text-align:left; }
-  .order-fingerprint strong{ display:block; font-size:13px; }
-  .order-fingerprint code{ display:block; margin-top:8px; overflow-wrap:anywhere; font-size:11px; color:var(--forest); }
-  .order-fingerprint small{ display:block; margin-top:8px; color:rgba(22,48,42,.65); line-height:1.5; }
-  .result-actions{ margin-top:26px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-
-  .spinner{ width:18px; height:18px; border-radius:50%; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff; animation:spin .7s linear infinite; display:inline-block; }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .checkout-grid{display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start}
+  @media(max-width:880px){.checkout-grid{grid-template-columns:1fr}}
+  .co-steps{display:flex;gap:10px;margin-bottom:28px;font-family:'Space Mono',monospace;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:rgba(22,48,42,.4)}
+  .co-steps .step.active{color:var(--forest);font-weight:700}
+  .co-steps .step:not(:last-child)::after{content:'→';margin-left:10px;color:rgba(22,48,42,.25)}
+  .co-view{display:none}.co-view.active{display:block}
+  [hidden]{display:none!important}
+  .summary-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center}
+  .summary-row:last-of-type{border-bottom:none}
+  .summary-row .thumb{width:44px;height:44px;border-radius:10px;flex-shrink:0;overflow:hidden}
+  .summary-row .thumb img{width:100%;height:100%;object-fit:cover}
+  .summary-row .info{flex:1}.summary-row .info .name{font-size:13.5px;font-weight:600}
+  .summary-row .info .qty{font-size:12px;color:rgba(22,48,42,.55);margin-top:2px}
+  .summary-row .amt{font-size:13.5px;font-weight:600}
+  .summary-total{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:16px;border-top:1.5px solid var(--line);font-size:16px;font-weight:700}
+  .pay-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .payment-choice{display:flex!important;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:12px;margin:8px 0;cursor:pointer}
+  .payment-choice input{accent-color:var(--forest)}
+  .payment-choice span{display:grid;gap:3px}.payment-choice small{font-size:12px;color:rgba(22,48,42,.6)}
+  .payment-note{padding:12px 14px;margin:12px 0;background:var(--clay);border-radius:10px;font-size:13px;line-height:1.55}
+  .field-error{font-size:11.5px;color:var(--danger);margin-top:4px;display:none}
+  .field-error.show{display:block}
+  .result-shell{text-align:center;padding:30px 10px}
+  .result-icon{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:32px}
+  .result-icon.ok{background:#EAF3EA;color:var(--success)}
+  .result-shell h2{font-size:24px;margin-bottom:8px}
+  .result-shell p{color:rgba(22,48,42,.62);font-size:14px;max-width:440px;margin:0 auto}
+  .result-meta{margin-top:22px;display:inline-block;text-align:left;background:var(--clay);border-radius:12px;padding:16px 20px;font-size:13px}
+  .result-meta div{display:flex;justify-content:space-between;gap:30px;padding:4px 0}
+  .result-actions{margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  @media(max-width:520px){.co-steps{font-size:9px;gap:5px}.co-steps .step:not(:last-child)::after{margin-left:5px}.pay-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body data-page="checkout">
-
 <header>
   <nav class="wrap">
-    <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#4E7A56"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#F5F1E6"/></svg>GreenNest</a>
+    <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#4E7A56"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#F5F1E6"/></svg>GreenNest</a>
     <div class="navlinks" id="navlinks">
-      <a href="index.html">Home</a>
-      <a href="shop.html">Shop</a>
-      <a href="quiz.html">Plant Quiz</a>
-      <a href="companion.html">Companion Planner</a>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="experts.html">Experts</a>
+      <a href="index.html">Home</a><a href="shop.html">Shop</a><a href="quiz.html">Plant Quiz</a>
+      <a href="companion.html">Companion Planner</a><a href="dashboard.html">Dashboard</a><a href="experts.html">Experts</a>
     </div>
     <div class="nav-icons">
       <button class="icon-btn" onclick="location.href='dashboard.html'" title="Wishlist / Dashboard">♡<span class="badge" id="wishlist-badge" style="display:none;">0</span></button>
       <button class="icon-btn" onclick="openDrawer('cart-drawer')" title="Cart">🛒<span class="badge" id="cart-badge" style="display:none;">0</span></button>
-      <button class="hamburger" onclick="toggleNav()">☰</button>
+      <button class="hamburger" onclick="toggleNav()" aria-label="Toggle navigation">☰</button>
     </div>
   </nav>
 </header>
 
 <section class="page-hero">
-  <div class="wrap">
-    <div class="eyebrow on-dark">Demo Checkout</div>
-    <h1>Complete your order</h1>
-    <p>Review your cart, then confirm payment through our simulated payment gateway.</p>
-  </div>
+  <div class="wrap"><div class="eyebrow on-dark">Secure Checkout</div><h1>Complete your order</h1><p>Review your items, enter delivery details, and choose a payment method.</p></div>
 </section>
 
 <section>
   <div class="wrap">
-
-    <div class="co-steps">
-      <span class="step active" id="step-label-1">1. Review order</span>
-      <span class="step" id="step-label-2">2. Shipping details</span>
-      <span class="step" id="step-label-3">3. eSewa payment</span>
+    <div class="co-steps" aria-label="Checkout progress">
+      <span class="step active" id="step-label-1">1. Review</span>
+      <span class="step" id="step-label-2">2. Delivery</span>
+      <span class="step" id="step-label-3">3. Payment</span>
       <span class="step" id="step-label-4">4. Confirmation</span>
     </div>
-
     <div class="checkout-grid">
-
       <div>
-        <!-- Step 1: review -->
         <div class="co-view active card" id="view-review">
-          <h3 style="font-size:18px; margin-bottom:14px;">Your order</h3>
+          <h3 style="font-size:18px;margin-bottom:14px">Your order</h3>
           <div id="review-rows"></div>
           <div class="summary-total"><span>Total</span><span id="review-total">NPR 0</span></div>
-          <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="goToPayment()">Proceed to payment →</button>
+          <button class="btn btn-primary btn-block" style="margin-top:20px" onclick="goToShipping()">Continue to delivery →</button>
         </div>
 
-        <!-- Step 2: delivery details -->
         <div class="co-view card" id="view-shipping">
-          <h3 style="font-size:18px; margin-bottom:6px;">Where should we deliver?</h3>
-          <p style="font-size:13px; color:rgba(22,48,42,.6); margin-bottom:18px;">Add the recipient and delivery address for your GreenNest order.</p>
-          <form id="shipping-form">
+          <h3 style="font-size:18px;margin-bottom:6px">Delivery details</h3>
+          <p style="font-size:13px;color:rgba(22,48,42,.6);margin-bottom:18px">Where should we deliver your order?</p>
+          <form id="shipping-form" novalidate>
             <div class="pay-row">
-              <div class="field">
-                <label for="shipping-name">Recipient name</label>
-                <input type="text" id="shipping-name" placeholder="Full name" autocomplete="name" required>
-                <div class="field-error" id="err-shipping-name">Enter the recipient name.</div>
-              </div>
-              <div class="field">
-                <label for="shipping-phone">Phone number</label>
-                <input type="tel" id="shipping-phone" placeholder="98XXXXXXXX" maxlength="10" inputmode="numeric" autocomplete="tel" required>
-                <div class="field-error" id="err-shipping-phone">Enter a valid 10-digit phone number.</div>
-              </div>
+              <div class="field"><label for="shipping-name">Recipient name</label><input type="text" id="shipping-name" autocomplete="name" maxlength="80" required><div class="field-error" id="err-shipping-name">Enter the recipient name.</div></div>
+              <div class="field"><label for="shipping-phone">Phone number</label><input type="tel" id="shipping-phone" placeholder="98XXXXXXXX" maxlength="10" inputmode="numeric" autocomplete="tel" required><div class="field-error" id="err-shipping-phone">Enter a valid 10-digit phone number.</div></div>
             </div>
-            <div class="field">
-              <label for="shipping-address">Delivery address</label>
-              <textarea id="shipping-address" rows="3" placeholder="House number, street and area" autocomplete="street-address" required></textarea>
-              <div class="field-error" id="err-shipping-address">Enter the delivery address.</div>
-            </div>
-            <div class="field">
-              <label for="shipping-city">City</label>
-              <input type="text" id="shipping-city" placeholder="Kathmandu" autocomplete="address-level2" required>
-              <div class="field-error" id="err-shipping-city">Enter the delivery city.</div>
-            </div>
-            <div class="field">
-              <label for="shipping-email">Email address</label>
-              <input type="email" id="shipping-email" placeholder="you@example.com" autocomplete="email" required>
-              <div class="field-error" id="err-shipping-email">Enter a valid email address.</div>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block" style="margin-top:10px;">Continue to eSewa payment →</button>
+            <div class="field"><label for="shipping-address">Delivery address</label><textarea id="shipping-address" rows="3" autocomplete="street-address" maxlength="240" required></textarea><div class="field-error" id="err-shipping-address">Enter the delivery address.</div></div>
+            <div class="field"><label for="shipping-city">City</label><input type="text" id="shipping-city" autocomplete="address-level2" maxlength="80" required><div class="field-error" id="err-shipping-city">Enter the delivery city.</div></div>
+            <div class="field"><label for="shipping-email">Email address</label><input type="email" id="shipping-email" placeholder="you@example.com" autocomplete="email" maxlength="254" required><div class="field-error" id="err-shipping-email">Enter a valid email address.</div></div>
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top:10px">Continue to payment →</button>
           </form>
         </div>
 
-        <!-- Step 3: simulated eSewa gateway -->
         <div class="co-view card" id="view-payment">
-          <h3 style="font-size:18px; margin-bottom:6px;">Payment details</h3>
-          <p style="font-size:13px; color:rgba(22,48,42,.6); margin-bottom:18px;">Pay from your GreenNest wallet after eSewa authorization. Available balance: <b id="checkout-balance">NPR 0</b></p>
-
-          <div class="card-preview">
-            <div class="crow"><span>eSewa</span><span>GreenNest Demo</span></div>
-            <div class="cnum" id="preview-number">eSewa Wallet</div>
-            <div class="crow">
-              <span>Wallet ID<b id="preview-name">YOUR MOBILE</b></span>
-              <span>Amount<b id="preview-expiry">NPR 0</b></span>
+          <h3 style="font-size:18px;margin-bottom:6px">Choose how to pay</h3>
+          <p style="font-size:13px;color:rgba(22,48,42,.6);margin-bottom:18px">Select card or cash on delivery.</p>
+          <form id="payment-form" novalidate>
+            <fieldset style="border:0;padding:0;margin:0 0 18px">
+              <legend style="font-weight:600;margin-bottom:10px">Payment method</legend>
+              <label class="payment-choice"><input type="radio" name="payment-method" value="card" required><span><b>Credit or debit card</b><small>Card authorization is simulated; no payment is taken.</small></span></label>
+              <label class="payment-choice"><input type="radio" name="payment-method" value="cash" required><span><b>Cash on delivery</b><small>Pay when your order arrives.</small></span></label>
+              <label class="payment-choice"><input type="radio" name="payment-method" value="wallet" required><span><b>GreenNest wallet</b><small>Available balance: <span id="checkout-balance">NPR 0</span></small></span></label>
+              <div class="field-error" id="err-payment-method">Choose a payment method.</div>
+            </fieldset>
+            <div class="payment-note" id="card-disclosure" hidden>Card details are used only for this on-page validation and are never stored or sent. This checkout does not charge cards.</div>
+            <div class="payment-note" id="wallet-disclosure" hidden>Wallet balance is stored in this browser and is separate from a bank account or external payment provider.</div>
+            <div class="field-error" id="err-wallet-balance">Your wallet balance is too low for this order.</div>
+            <div id="card-fields" hidden>
+              <div class="field"><label for="cardholder-name">Name on card</label><input type="text" id="cardholder-name" autocomplete="cc-name" maxlength="80"><div class="field-error" id="err-cardholder-name">Enter the name printed on the card.</div></div>
+              <div class="field"><label for="card-number">Card number</label><input type="text" id="card-number" inputmode="numeric" autocomplete="cc-number" maxlength="23" placeholder="1234 5678 9012 3456"><div class="field-error" id="err-card-number">Enter a valid card number.</div></div>
+              <div class="pay-row">
+                <div class="field"><label for="card-expiry">Expiry date</label><input type="text" id="card-expiry" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/YY"><div class="field-error" id="err-card-expiry">Enter a valid future expiry date.</div></div>
+                <div class="field"><label for="card-cvc">Security code</label><input type="password" id="card-cvc" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="3 or 4 digits"><div class="field-error" id="err-card-cvc">Enter a 3- or 4-digit security code.</div></div>
+              </div>
             </div>
-          </div>
-
-          <form id="payment-form">
-            <div class="field">
-              <label>eSewa ID / mobile number</label>
-              <input type="text" id="pay-name" placeholder="98XXXXXXXX" maxlength="10" inputmode="numeric" required>
-              <div class="field-error" id="err-name">Enter a valid 10-digit eSewa ID or mobile number.</div>
-            </div>
-            <div class="field">
-              <label>Demo eSewa MPIN</label>
-              <input type="password" id="pay-cvv" placeholder="1234" maxlength="4" inputmode="numeric" required>
-              <div class="field-error" id="err-cvv">Enter the 4-digit demo MPIN.</div>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block" style="margin-top:10px;" id="pay-submit-btn">
-              <span id="pay-btn-label">Pay with eSewa</span>
-            </button>
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top:10px" id="pay-submit-btn">Place order</button>
           </form>
-
-          <div class="test-hint">
-            Demo eSewa: enter any 10-digit number. The MPIN must be the first 4 digits of that number.
-          </div>
+          <button type="button" class="btn btn-ghost" style="margin-top:12px" onclick="setStep(2)">Back to delivery details</button>
         </div>
 
-        <!-- Step 4: result -->
-        <div class="co-view card" id="view-result">
-          <div class="result-shell" id="result-shell"></div>
-        </div>
+        <div class="co-view card" id="view-result"><div class="result-shell" id="result-shell"></div></div>
       </div>
-
-      <!-- Order summary sidebar -->
-      <div class="card">
-        <h3 style="font-size:15.5px; margin-bottom:14px;">Order summary</h3>
+      <aside class="card" aria-label="Order summary">
+        <h3 style="font-size:15.5px;margin-bottom:14px">Order summary</h3>
         <div id="sidebar-rows"></div>
         <div class="summary-total"><span>Total</span><span id="sidebar-total">NPR 0</span></div>
-      </div>
-
+      </aside>
     </div>
   </div>
 </section>
 
-<footer>
-  <div class="wrap">
-    <span><b>GreenNest</b> — Checkout &amp; Payment Simulation</span>
-    <span>Project Proposal · Dept. of CSIT, Tribhuvan University</span>
-  </div>
-</footer>
-
+<footer><div class="wrap"><span><b>GreenNest</b> — Secure checkout</span><span>Plants and garden supplies for your home.</span></div></footer>
 <div class="drawer-overlay" id="cart-drawer-overlay" onclick="closeDrawer('cart-drawer')"></div>
 <div class="drawer" id="cart-drawer">
-  <div class="drawer-head"><h3>Your Cart</h3><button class="modal-close" style="position:static;" onclick="closeDrawer('cart-drawer')">✕</button></div>
+  <div class="drawer-head"><h3>Your Cart</h3><button class="modal-close" style="position:static" onclick="closeDrawer('cart-drawer')" aria-label="Close cart">✕</button></div>
   <div class="drawer-body" id="cart-drawer-body"></div>
-  <div class="drawer-foot">
-    <div style="display:flex; justify-content:space-between; font-weight:600; margin-bottom:14px;">
-      <span>Total</span><span id="cart-drawer-total">NPR 0</span>
-    </div>
-    <button class="btn btn-primary btn-block" onclick="checkoutNow()">Checkout</button>
-  </div>
+  <div class="drawer-foot"><div style="display:flex;justify-content:space-between;font-weight:600;margin-bottom:14px"><span>Total</span><span id="cart-drawer-total">NPR 0</span></div><button class="btn btn-primary btn-block" onclick="checkoutNow()">Checkout</button></div>
 </div>
-
 <div id="toast-holder"></div>
-
-<script src="js/tracking-config.js"></script>
-<script src="js/data.js"></script>
+  <script src="js/tracking-config.js"></script>
+  <script src="js/data.js"></script>
 <script src="js/main.js"></script>
 <script>
-  // If the cart is empty on arrival, there's nothing to check out.
-  if(getCart().length === 0){
-    window.location.href = "shop.html";
+  if(getCart().length === 0) window.location.replace("shop.html");
+  if(typeof gnTrack === "function"){
+    gnTrack("begin_checkout", {currency:"NPR", value:cartTotal(), items:gnProductItems(getCart())});
+  }
+
+  function escapeText(value){
+    return String(value).replace(/[&<>"']/g, (character)=>({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+    })[character]);
   }
 
   function renderOrderRows(containerId){
-    const cart = getCart();
     const box = document.getElementById(containerId);
-    box.innerHTML = cart.map(i=>{
-      const p = PRODUCTS.find(x=>x.id===i.id);
-      if(!p) return "";
-      return `
-        <div class="summary-row">
-          <div class="thumb"><img src="${p.image}" alt="${p.name}"></div>
-          <div class="info">
-            <div class="name">${p.name}</div>
-            <div class="qty">Qty ${i.qty} × NPR ${p.price}</div>
-          </div>
-          <div class="amt">NPR ${(p.price*i.qty).toLocaleString()}</div>
-        </div>`;
+    box.innerHTML = getCart().map((item)=>{
+      const product = PRODUCTS.find((entry)=>entry.id === item.id);
+      if(!product) return "";
+      return `<div class="summary-row">
+        <div class="thumb"><img src="${escapeText(product.image)}" alt="${escapeText(product.name)}"></div>
+        <div class="info"><div class="name">${escapeText(product.name)}</div><div class="qty">Qty ${item.qty} × NPR ${product.price.toLocaleString()}</div></div>
+        <div class="amt">NPR ${(product.price * item.qty).toLocaleString()}</div>
+      </div>`;
     }).join("");
   }
 
@@ -254,27 +174,20 @@
     const total = "NPR " + cartTotal().toLocaleString();
     document.getElementById("review-total").textContent = total;
     document.getElementById("sidebar-total").textContent = total;
-    document.getElementById("preview-expiry").textContent = total;
   }
   renderSummaries();
 
   function setStep(step){
-    ["review","shipping","payment","result"].forEach((name,i)=>{
-      document.getElementById(`view-${name}`).classList.toggle("active", i===step-1);
-      document.getElementById(`step-label-${i+1}`).classList.toggle("active", i===step-1);
+    ["review", "shipping", "payment", "result"].forEach((name, index)=>{
+      document.getElementById(`view-${name}`).classList.toggle("active", index === step - 1);
+      document.getElementById(`step-label-${index + 1}`).classList.toggle("active", index === step - 1);
     });
+    window.scrollTo({top:0, behavior:"smooth"});
   }
 
-  document.getElementById("checkout-balance").textContent = "NPR " + getWalletBalance().toLocaleString();
-
+  function goToShipping(){ setStep(2); }
+  function showError(id, show){ document.getElementById(id).classList.toggle("show", show); }
   let shippingDetails = null;
-
-  function goToPayment(){ setStep(2); }
-  gnTrack("begin_checkout", {
-    currency:"NPR",
-    value:cartTotal(),
-    items:gnProductItems(getCart()),
-  });
 
   document.getElementById("shipping-phone").addEventListener("input", (event)=>{
     event.target.value = event.target.value.replace(/\D/g, "").slice(0, 10);
@@ -282,142 +195,176 @@
 
   document.getElementById("shipping-form").addEventListener("submit", (event)=>{
     event.preventDefault();
-    const name = document.getElementById("shipping-name").value.trim();
-    const phone = document.getElementById("shipping-phone").value.trim();
-    const address = document.getElementById("shipping-address").value.trim();
-    const city = document.getElementById("shipping-city").value.trim();
-    const email = document.getElementById("shipping-email").value.trim();
+    const details = {
+      name:document.getElementById("shipping-name").value.trim(),
+      phone:document.getElementById("shipping-phone").value.trim(),
+      address:document.getElementById("shipping-address").value.trim(),
+      city:document.getElementById("shipping-city").value.trim(),
+      email:document.getElementById("shipping-email").value.trim(),
+    };
     const checks = {
-      "err-shipping-name": name.length >= 2,
-      "err-shipping-phone": /^9\d{9}$/.test(phone),
-      "err-shipping-address": address.length >= 5,
-      "err-shipping-city": city.length >= 2,
-      "err-shipping-email": /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+      "err-shipping-name":details.name.length >= 2,
+      "err-shipping-phone":/^9\d{9}$/.test(details.phone),
+      "err-shipping-address":details.address.length >= 5,
+      "err-shipping-city":details.city.length >= 2,
+      "err-shipping-email":/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.email),
     };
     Object.entries(checks).forEach(([id, valid])=>showError(id, !valid));
     if(!Object.values(checks).every(Boolean)) return;
-    shippingDetails = { name, phone, address, city, email };
-    gnTrack("add_shipping_info", { currency:"NPR", value:cartTotal(), items:gnProductItems(getCart()) });
+    shippingDetails = details;
+    if(typeof gnTrack === "function"){
+      gnTrack("add_shipping_info", {currency:"NPR", value:cartTotal(), items:gnProductItems(getCart())});
+    }
     setStep(3);
   });
 
-  // Live card preview
-  const walletInput = document.getElementById("pay-name");
-  const mpinInput = document.getElementById("pay-cvv");
-
-  walletInput.addEventListener("input", ()=>{
-    const digits = walletInput.value.replace(/\D/g, "").slice(0, 10);
-    walletInput.value = digits;
-    document.getElementById("preview-name").textContent = digits || "YOUR MOBILE";
+  const cardFields = document.getElementById("card-fields");
+  const cardDisclosure = document.getElementById("card-disclosure");
+  const walletDisclosure = document.getElementById("wallet-disclosure");
+  const paymentForm = document.getElementById("payment-form");
+  document.getElementById("checkout-balance").textContent = `NPR ${getWalletBalance().toLocaleString()}`;
+  paymentForm.querySelectorAll('[name="payment-method"]').forEach((radio)=>{
+    radio.addEventListener("change", ()=>{
+      const method = paymentForm.querySelector('[name="payment-method"]:checked')?.value;
+      const isCard = method === "card";
+      const isWallet = method === "wallet";
+      cardFields.hidden = !isCard;
+      cardDisclosure.hidden = !isCard;
+      walletDisclosure.hidden = !isWallet;
+      document.getElementById("pay-submit-btn").textContent = isCard ? "Place card order" : isWallet ? "Pay with GreenNest wallet" : "Place cash-on-delivery order";
+    });
   });
 
-  mpinInput.addEventListener("input", ()=>{
-    mpinInput.value = mpinInput.value.replace(/\D/g, "").slice(0, 4);
+  const cardNumberInput = document.getElementById("card-number");
+  cardNumberInput.addEventListener("input", ()=>{
+    const digits = cardNumberInput.value.replace(/\D/g, "").slice(0, 19);
+    cardNumberInput.value = digits.replace(/(.{4})/g, "$1 ").trim();
+  });
+  document.getElementById("card-expiry").addEventListener("input", (event)=>{
+    const digits = event.target.value.replace(/\D/g, "").slice(0, 4);
+    event.target.value = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+  });
+  document.getElementById("card-cvc").addEventListener("input", (event)=>{
+    event.target.value = event.target.value.replace(/\D/g, "").slice(0, 4);
   });
 
-  function showError(id, show){
-    document.getElementById(id).classList.toggle("show", show);
-  }
-
-  function validatePaymentForm(){
-    let valid = true;
-    const walletId = walletInput.value.replace(/\D/g, "");
-    const mpin = mpinInput.value.trim();
-
-    const nameOk = /^\d{10}$/.test(walletId);
-    showError("err-name", !nameOk); valid = valid && nameOk;
-
-    const cvvOk = /^\d{4}$/.test(mpin) && mpin === walletId.slice(0, 4);
-    showError("err-cvv", !cvvOk); valid = valid && cvvOk;
-
-    return { valid, walletId };
-  }
-
-  document.getElementById("payment-form").addEventListener("submit", function(ev){
-    ev.preventDefault();
-    const { valid, walletId } = validatePaymentForm();
-    if(!valid) return;
-    gnTrack("add_payment_info", { currency:"NPR", value:cartTotal(), payment_type:"eSewa", items:gnProductItems(getCart()) });
-
-    const btn = document.getElementById("pay-submit-btn");
-    const label = document.getElementById("pay-btn-label");
-    btn.disabled = true;
-    label.innerHTML = `<span class="spinner"></span> Connecting to eSewa…`;
-
-    // Simulate a network round-trip to a payment gateway.
-    setTimeout(()=>{
-      btn.disabled = false;
-      label.textContent = "Pay with eSewa";
-      showSuccess();
-    }, 1100);
-  });
-
-  async function createOrderFingerprint(order){
-    if(!window.crypto?.subtle || !window.TextEncoder){
-      throw new Error("SHA-256 is unavailable in this browser context. Open GreenNest on localhost or HTTPS.");
+  function passesLuhn(value){
+    const digits = value.replace(/\D/g, "");
+    if(digits.length < 13 || digits.length > 19) return false;
+    let sum = 0;
+    let doubleDigit = false;
+    for(let index = digits.length - 1; index >= 0; index--){
+      let digit = Number(digits[index]);
+      if(doubleDigit){
+        digit *= 2;
+        if(digit > 9) digit -= 9;
+      }
+      sum += digit;
+      doubleDigit = !doubleDigit;
     }
-    const payload = {
-      orderId:order.id,
-      currency:"NPR",
-      total:order.total,
-      date:order.date,
-      items:order.items.map(item=>({ productId:item.id, quantity:item.qty })),
+    return sum % 10 === 0;
+  }
+
+  function isFutureExpiry(value){
+    const match = /^(0[1-9]|1[0-2])\/(\d{2})$/.exec(value);
+    if(!match) return false;
+    const month = Number(match[1]);
+    const year = 2000 + Number(match[2]);
+    const now = new Date();
+    return year > now.getFullYear() || (year === now.getFullYear() && month >= now.getMonth() + 1);
+  }
+
+  function validateCard(){
+    const name = document.getElementById("cardholder-name").value.trim();
+    const number = cardNumberInput.value.replace(/\D/g, "");
+    const expiry = document.getElementById("card-expiry").value.trim();
+    const cvc = document.getElementById("card-cvc").value.trim();
+    const checks = {
+      "err-cardholder-name":name.length >= 2,
+      "err-card-number":passesLuhn(number),
+      "err-card-expiry":isFutureExpiry(expiry),
+      "err-card-cvc":/^\d{3,4}$/.test(cvc),
     };
-    const encoded = new TextEncoder().encode(JSON.stringify(payload));
-    const digest = await window.crypto.subtle.digest("SHA-256", encoded);
-    return Array.from(new Uint8Array(digest), byte=>byte.toString(16).padStart(2, "0")).join("");
+    Object.entries(checks).forEach(([id, valid])=>showError(id, !valid));
+    return Object.values(checks).every(Boolean);
   }
 
-  function showSuccess(){
-    const order = placeOrder(shippingDetails);
-    if(order && order.error){
-      showFailure(order.error);
-      return;
-    }
-    setStep(4);
+  async function showConfirmation(order){
+    const cardPayment = order.paymentMethod === "card";
+    const walletPayment = order.paymentMethod === "wallet";
+    const message = cardPayment
+      ? "Your order is recorded. Card authorization is simulated; no payment has been taken."
+      : walletPayment
+        ? "Your order is recorded and the GreenNest wallet balance has been charged."
+        : "Your order is recorded. Please pay the courier in cash when it arrives.";
     document.getElementById("result-shell").innerHTML = `
-      <div class="result-icon ok">✓</div>
-      <h2>Demo payment approved</h2>
-      <p>The simulated payment was approved and your demo order was placed. No real eSewa transaction occurred.</p>
+      <div class="result-icon ok" aria-hidden="true">✓</div>
+      <h2>Order placed</h2>
+      <p>${message}</p>
       <div class="result-meta">
-        <div><span>Order ID</span><span>${order.id}</span></div>
-        <div><span>Demo total</span><span>NPR ${order.total.toLocaleString()}</span></div>
-        <div><span>Deliver to</span><span>${order.shipping.name}</span></div>
-        <div><span>Phone</span><span>${order.shipping.phone}</span></div>
-        <div><span>Status</span><span>Demo approved</span></div>
+        <div><span>Order ID</span><span id="confirmation-order-id"></span></div>
+        <div><span>Total</span><span id="confirmation-total"></span></div>
+        <div><span>Deliver to</span><span id="confirmation-name"></span></div>
+        <div><span>Payment</span><span id="confirmation-payment"></span></div>
       </div>
-      <div class="order-fingerprint" aria-live="polite">
-        <strong>Order fingerprint (SHA-256)</strong>
-        <code id="order-fingerprint-value">Generating fingerprint…</code>
-        <small>This client-generated hash summarizes the order ID, total, date, and purchased item IDs and quantities. It is for demonstration only; it does not encrypt data, authenticate the payment, or make this simulated checkout secure.</small>
-      </div>
+      <p id="email-status" role="status" style="margin-top:18px"></p>
+      <button type="button" id="retry-email" class="btn btn-ghost" style="margin-top:12px" hidden>Retry confirmation email</button>
       <div class="result-actions">
         <a href="dashboard.html" class="btn btn-primary">Go to dashboard</a>
         <a href="shop.html" class="btn btn-ghost">Continue shopping</a>
       </div>`;
-    createOrderFingerprint(order)
-      .then(fingerprint=>{ document.getElementById("order-fingerprint-value").textContent = fingerprint; })
-      .catch(error=>{
-        console.error("Unable to generate the demo order fingerprint.", error);
-        document.getElementById("order-fingerprint-value").textContent = error.message || "Fingerprint generation failed.";
-      });
+    document.getElementById("confirmation-order-id").textContent = order.id;
+    document.getElementById("confirmation-total").textContent = `NPR ${order.total.toLocaleString()}`;
+    document.getElementById("confirmation-name").textContent = order.shipping.name;
+    document.getElementById("confirmation-payment").textContent = cardPayment ? "Card (simulated)" : walletPayment ? "GreenNest wallet" : "Cash on delivery";
+    setStep(4);
     renderCartDrawer();
-    emailOrderConfirmation(order)
-      .then(()=>toast(`Confirmation email sent to ${order.shipping.email}.`))
-      .catch(()=>toast("Order placed, but the confirmation email could not be sent."));
+    await sendConfirmationEmail(order);
   }
 
-  function showFailure(message="The payment gateway rejected this transaction. Your wallet was not charged."){
-    setStep(4);
-    document.getElementById("result-shell").innerHTML = `
-      <div class="result-icon fail">✕</div>
-      <h2>Payment declined</h2>
-      <p>${message} Your cart has been kept so you can top up or try again.</p>
-      <div class="result-actions">
-        <button class="btn btn-primary" onclick="setStep(3)">Try again</button>
-        <a href="shop.html" class="btn btn-ghost">Back to shop</a>
-      </div>`;
+  async function sendConfirmationEmail(order){
+    const status = document.getElementById("email-status");
+    const retryButton = document.getElementById("retry-email");
+    retryButton.hidden = true;
+    status.textContent = "Sending your confirmation email…";
+    try{
+      await emailOrderConfirmation(order);
+      status.textContent = `Confirmation email sent to ${order.shipping.email}.`;
+    }catch(error){
+      status.textContent = `Your order is placed, but the confirmation email could not be sent: ${error.message}`;
+      retryButton.hidden = false;
+      retryButton.onclick = ()=>sendConfirmationEmail(order);
+    }
   }
+
+  paymentForm.addEventListener("submit", async (event)=>{
+    event.preventDefault();
+    const selectedMethod = paymentForm.querySelector('[name="payment-method"]:checked');
+    showError("err-payment-method", !selectedMethod);
+    if(!selectedMethod) return;
+    if(!shippingDetails){ setStep(2); return; }
+    const method = selectedMethod.value;
+    if(method === "card" && !validateCard()) return;
+    const total = cartTotal();
+    const hasWalletBalance = method !== "wallet" || getWalletBalance() >= total;
+    showError("err-wallet-balance", !hasWalletBalance);
+    if(!hasWalletBalance) return;
+    if(typeof gnTrack === "function"){
+      gnTrack("add_payment_info", {currency:"NPR", value:cartTotal(), payment_type:method, items:gnProductItems(getCart())});
+    }
+    const order = placeOrder(shippingDetails, {
+      method,
+      status:method === "card" ? "simulated; no charge collected" : method === "wallet" ? "paid from GreenNest wallet" : "payment due on delivery",
+    });
+    if(!order || order.error){
+      toast(order?.error || "Unable to place your order.");
+      return;
+    }
+    ["cardholder-name", "card-number", "card-expiry", "card-cvc"].forEach((id)=>{
+      document.getElementById(id).value = "";
+    });
+    await showConfirmation(order);
+  });
 </script>
 </body>
 </html>

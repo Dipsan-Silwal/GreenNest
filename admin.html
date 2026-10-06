@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Panel — GreenNest</title>
-<meta name="description" content="Manage GreenNest demo products, orders, experts and appointments from the administration panel.">
+<meta name="description" content="Manage GreenNest products, orders, experts and appointments from the administration panel.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -100,7 +100,7 @@
       <div class="kpi"><div class="n" id="kpi-experts">0</div><div class="l">Verified experts</div></div>
       <div class="kpi"><div class="n" id="kpi-bookings">0</div><div class="l">Total bookings</div></div>
       <div class="kpi"><div class="n" id="kpi-orders">0</div><div class="l">Orders placed</div></div>
-      <div class="kpi"><div class="n" id="kpi-revenue">NPR 0</div><div class="l">Total revenue</div></div>
+      <div class="kpi"><div class="n" id="kpi-revenue">NPR 0</div><div class="l">Total order value</div></div>
     </div>
 
     <!-- OVERVIEW -->
@@ -111,10 +111,10 @@
         <form id="admin-wallet-form">
           <input id="admin-wallet-amount" type="number" min="100" max="50000" step="100" placeholder="Amount (NPR)" required>
           <input id="admin-wallet-esewa" inputmode="numeric" maxlength="10" placeholder="eSewa mobile" required>
-          <input id="admin-wallet-mpin" type="password" inputmode="numeric" maxlength="4" placeholder="Demo MPIN" required>
+          <input id="admin-wallet-mpin" type="password" inputmode="numeric" maxlength="4" placeholder="eSewa simulation MPIN" required>
           <button class="btn btn-gold btn-sm" type="submit">Load with eSewa</button>
         </form>
-        <div id="admin-wallet-message" style="font-size:12px;color:var(--sage);margin-top:8px;">Customer payments are credited here.</div>
+        <div id="admin-wallet-message" style="font-size:12px;color:var(--sage);margin-top:8px;">GreenNest wallet payments are credited here.</div>
       </div>
       <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Recent activity</h2></div>
       <div class="table-wrap">
@@ -174,7 +174,7 @@
       <div class="section-head" style="margin-bottom:16px;"><h2 style="font-size:19px;">Manage orders</h2></div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>Order ID</th><th>Items</th><th>Total</th><th>Date</th></tr></thead>
+          <thead><tr><th>Order ID</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th></tr></thead>
           <tbody id="orders-body"></tbody>
         </table>
       </div>
@@ -302,9 +302,11 @@
         <td>${o.id}</td>
         <td>${o.items.reduce((s,i)=>s+i.qty,0)} item(s)</td>
         <td>NPR ${o.total.toLocaleString()}</td>
+        <td>${o.paymentMethod === "cash" ? "Cash on delivery" : o.paymentMethod === "wallet" ? "GreenNest wallet" : o.paymentMethod === "card" ? "Card (simulated)" : "Not recorded"}</td>
+        <td>${o.status || "Order placed"}</td>
         <td>${new Date(o.date).toLocaleDateString()}</td>
       </tr>
-    `).join("") : `<tr><td colspan="4" style="text-align:center; color:rgba(22,48,42,.5); padding:30px;">No orders yet.</td></tr>`;
+    `).join("") : `<tr><td colspan="6" style="text-align:center; color:rgba(22,48,42,.5); padding:30px;">No orders yet.</td></tr>`;
   }
 
   function exportProducts(){
@@ -314,7 +316,7 @@
   }
   function exportOrders(){
     const orders = readLS(LS.orders, []);
-    const rows = [["Order ID","Items","Total","Date"], ...orders.map(o=>[o.id, o.items.reduce((s,i)=>s+i.qty,0), o.total, o.date])];
+    const rows = [["Order ID","Items","Total","Payment method","Payment status","Date"], ...orders.map(o=>[o.id, o.items.reduce((s,i)=>s+i.qty,0), o.total, o.paymentMethod || "Not recorded", o.status || "Order placed", o.date])];
     downloadCSV("greennest_orders.csv", rows);
     toast("Orders report downloaded");
   }

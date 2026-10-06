@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GreenNest Login</title>
-  <meta name="description" content="Sign in to your GreenNest demo account to explore plant care, gardening products and order history.">
+  <meta name="description" content="Sign in to GreenNest to explore plant care, gardening products and order history.">
   <meta name="robots" content="noindex, nofollow">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -81,7 +81,7 @@
       background: linear-gradient(180deg, var(--forest), #214837);
       box-shadow: 0 12px 24px -16px rgba(22,48,42,.8);
     }
-    .demo-box {
+    .account-box {
       margin-top: 20px;
       border: 1px dashed rgba(22,48,42,.2);
       border-radius: 14px;
@@ -91,7 +91,7 @@
       color: rgba(22,48,42,.72);
       line-height: 1.8;
     }
-    .demo-box strong { color: var(--forest); }
+    .account-box strong { color: var(--forest); }
     .error {
       display: none;
       color: var(--danger);
@@ -134,11 +134,11 @@
       <div id="login-error" class="error">Invalid username or password.</div>
     </form>
 
-    <div class="demo-box">
-      <strong>Demo accounts</strong><br />
+    <div class="account-box">
+      <strong>Sample accounts</strong><br />
       Admin: <strong>admin</strong> / <strong>admin</strong><br />
-      Customer: <strong>customer</strong> / <strong>customer</strong><br />
-      Expert: <strong>expert</strong> / <strong>expert</strong>
+      Customers: <strong>customer1</strong> through <strong>customer5</strong> (password matches username)<br />
+      Experts: <strong>expert1</strong> through <strong>expert6</strong> (password matches username)
     </div>
   </div>
 
@@ -154,10 +154,10 @@
       const role = document.getElementById('role').value;
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
-      const result = loginDemoUser(username, role, password);
+      const result = loginSampleUser(username, role, password);
 
       if (result) {
-        window.location.href = getUserHome(role);
+        window.location.href = getUserHome(result.role);
         return;
       }
 
@@ -169,9 +169,9 @@
       const usernameInput = document.getElementById('username');
       roleSelect.addEventListener('change', function () {
         const value = this.value;
-        usernameInput.value = value;
+        usernameInput.value = value === 'admin' ? 'admin' : value + '1';
       });
-      usernameInput.value = roleSelect.value;
+      usernameInput.value = roleSelect.value === 'admin' ? 'admin' : roleSelect.value + '1';
     });
   </script>
 </body>

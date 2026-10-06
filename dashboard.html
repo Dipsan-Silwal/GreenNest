@@ -103,9 +103,9 @@
         <form class="wallet-form" id="wallet-topup-form">
           <input id="wallet-amount" type="number" min="100" max="50000" step="100" placeholder="Top-up amount (NPR)" required>
           <input id="wallet-esewa" type="text" inputmode="numeric" maxlength="10" placeholder="eSewa mobile number" required>
-          <input id="wallet-mpin" type="password" inputmode="numeric" maxlength="4" placeholder="eSewa demo MPIN" required>
+          <input id="wallet-mpin" type="password" inputmode="numeric" maxlength="4" placeholder="eSewa simulation MPIN" required>
           <button class="btn btn-gold btn-block" type="submit">Load wallet with eSewa</button>
-          <div class="wallet-message" id="wallet-message">Use any 10-digit eSewa number. MPIN: first 4 digits of the number.</div>
+          <div class="wallet-message" id="wallet-message">Wallet top-up is simulated. Use a 10-digit number; the MPIN must match its first four digits.</div>
         </form>
         <div class="wallet-ledger" id="wallet-ledger"></div>
       </div>
@@ -355,7 +355,7 @@
     if(orders.length===0){ box.innerHTML = `<div class="empty-mini">No orders yet — place one from the shop.</div>`; return; }
     box.innerHTML = orders.map(o=>`
       <div class="summary-row">
-        <span>${o.id} · ${o.items.reduce((s,i)=>s+i.qty,0)} item(s) · ${new Date(o.date).toLocaleDateString()}</span>
+        <span>${o.id} · ${o.items.reduce((s,i)=>s+i.qty,0)} item(s) · ${new Date(o.date).toLocaleDateString()}<br><small>${o.paymentMethod === "cash" ? "Cash on delivery" : o.paymentMethod === "wallet" ? "GreenNest wallet" : o.paymentMethod === "card" ? "Card (simulated; no charge)" : "Payment method not recorded"} · ${o.status || "Order placed"}</small></span>
         <span>NPR ${o.total.toLocaleString()}</span>
       </div>`).join("");
   }
@@ -378,7 +378,8 @@
 
   /* ---------- Bookings ---------- */
   function renderBookings(){
-    const bookings = getBookings();
+    const username = getSession()?.username;
+    const bookings = getBookings().filter(booking=>booking.customerUsername === username);
     const box = document.getElementById("bookings-list");
     if(bookings.length===0){ box.innerHTML = `<div class="empty-mini">No expert bookings yet.</div>`; return; }
     box.innerHTML = bookings.map(b=>`

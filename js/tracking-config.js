@@ -4,10 +4,10 @@ window.GN_TRACKING_CONFIG = {
   metaPixelId: "",
   adsenseClient: "",
   adsenseSlot: "",
-  demoIds: {
-    ga4: "DEMO-GA4-GREENNEST",
-    metaPixel: "DEMO-PIXEL-GREENNEST",
-    adsenseClient: "DEMO-ADSENSE-GREENNEST",
-    adsenseSlot: "DEMO-AD-SLOT",
+  placeholderIds: {
+    ga4: "PLACEHOLDER-GA4-ID",
+    metaPixel: "PLACEHOLDER-PIXEL-ID",
+    adsenseClient: "PLACEHOLDER-ADSENSE-ID",
+    adsenseSlot: "PLACEHOLDER-AD-SLOT",
   },
 };

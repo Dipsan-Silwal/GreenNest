@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Expert Panel — GreenNest</title>
-<meta name="description" content="Manage GreenNest demo gardening consultations and expert booking requests.">
+<meta name="description" content="Manage GreenNest gardening consultations and expert booking requests.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -54,7 +54,7 @@
   <nav class="wrap">
     <a href="index.html" class="brand"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#D9A448"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#16302A"/></svg>GreenNest <span style="font-weight:400; opacity:.6; font-size:13px;">/ Expert Panel</span></a>
     <div class="who">
-      <select id="expert-selector"></select>
+      <span id="expert-identity" style="color:var(--paper); font-size:13px;"></span>
       <a href="index.html" class="back-link">← Exit to customer site</a>
     </div>
   </nav>
@@ -94,26 +94,29 @@
 <script src="js/data.js"></script>
 <script src="js/main.js"></script>
 <script>
-  const sel = document.getElementById("expert-selector");
-  sel.innerHTML = EXPERTS.map(e=>`<option value="${e.id}">${e.name} — ${e.specialty}</option>`).join("");
-  let currentExpertId = EXPERTS[0].id;
-  sel.addEventListener("change", ()=>{ currentExpertId = Number(sel.value); renderAll(); });
+  const expertAccount = getSession();
+  const currentExpertId = Number((expertAccount?.username || "").replace(/^expert/, ""));
+  const currentExpert = EXPERTS.find(expert=>expert.id === currentExpertId);
+  if(currentExpert){
+    document.getElementById("expert-identity").textContent = `Signed in as ${expertAccount.label} (${expertAccount.username})`;
+  }else if(expertAccount?.role === "admin"){
+    document.getElementById("expert-identity").textContent = "Signed in as Admin";
+  }
 
   function myBookings(){
-    // In this demo, all customer bookings are visible to any expert whose
-    // specialty was requested — matching how a real booking inbox would work.
-    const expert = EXPERTS.find(e=>e.id===currentExpertId);
-    return getBookings().filter(b => b.expertId === currentExpertId || b.specialty === expert.specialty);
+    const bookings = getBookings();
+    return expertAccount?.role === "admin" ? bookings : bookings.filter(b => b.expertId === currentExpertId);
   }
 
   function renderKPIs(){
     const bookings = myBookings();
-    const expert = EXPERTS.find(e=>e.id===currentExpertId);
-    document.getElementById("expert-heading").textContent = `${expert.name.split(" ")[0]}'s booking requests`;
+    document.getElementById("expert-heading").textContent = currentExpert
+      ? `${currentExpert.name.split(" ")[0]}'s booking requests`
+      : "All expert booking requests";
     document.getElementById("kpi-pending").textContent = bookings.filter(b=>b.status==="Pending confirmation").length;
     document.getElementById("kpi-accepted").textContent = bookings.filter(b=>b.status==="Accepted").length;
     document.getElementById("kpi-completed").textContent = bookings.filter(b=>b.status==="Completed").length;
-    document.getElementById("kpi-rating").textContent = expert.rating.toFixed(1);
+    document.getElementById("kpi-rating").textContent = currentExpert ? currentExpert.rating.toFixed(1) : "—";
   }
 
   function statusClass(status){
@@ -159,7 +162,7 @@
     const bookings = myBookings().filter(b=>b.status==="Accepted");
     const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
     document.getElementById("schedule-grid").innerHTML = days.map((d,i)=>{
-      const dayBookings = bookings.filter((b,idx)=> idx % 7 === i); // simple demo distribution
+      const dayBookings = bookings.filter((b,idx)=> idx % 7 === i); // Simple fallback distribution.
       return `<div class="day-col"><div class="dh">${d}</div>${
         dayBookings.length ? dayBookings.map(b=>`<div class="slot">${b.date.split('·')[1]?.trim() || 'Booked'}</div>`).join("") : `<div class="empty">Free</div>`
       }</div>`;
@@ -172,7 +175,12 @@
     document.getElementById("tab-schedule").style.display = tab==="schedule" ? "block" : "none";
   }
 
-  function renderAll(){ renderKPIs(); renderRequests(); renderSchedule(); }
+  function renderAll(){
+    if(!currentExpert && expertAccount?.role !== "admin") return;
+    renderKPIs();
+    renderRequests();
+    renderSchedule();
+  }
   renderAll();
 </script>
 </body>

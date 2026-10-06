@@ -14,10 +14,8 @@ const LS = {
   wallets: "greennest_wallets",
 };
 
-const DEMO_USERS = {
+const SAMPLE_USERS = {
   admin: { username: "admin", password: "admin", role: "admin", label: "Admin" },
-  customer: { username: "customer", password: "customer", role: "customer", label: "Customer" },
-  expert: { username: "expert", password: "expert", role: "expert", label: "Expert" },
 };
 
 function getSession(){ return readLS(LS.session, null); }
@@ -28,11 +26,27 @@ function getUserHome(role){
   if(role === "expert") return "expert-panel.html";
   return "index.html";
 }
-function loginDemoUser(username, role, password){
+function getSampleAccount(username, role){
   const roleKey = String(role || "").trim().toLowerCase();
-  const user = DEMO_USERS[roleKey];
+  const usernameKey = String(username || "").trim().toLowerCase();
+  if(roleKey === "admin"){
+    return usernameKey === SAMPLE_USERS.admin.username ? SAMPLE_USERS.admin : null;
+  }
+  if(roleKey !== "customer" && roleKey !== "expert") return null;
+
+  const match = new RegExp(`^${roleKey}(\\d+)$`).exec(usernameKey);
+  if(!match || String(Number(match[1])) !== match[1]) return null;
+  const accountNumber = Number(match[1]);
+  if(roleKey === "customer"){
+    const customer = CUSTOMER_PROFILES.find(profile=>profile.username === usernameKey);
+    return customer ? { username:usernameKey, password:usernameKey, role:roleKey, label:customer.name } : null;
+  }
+  const expert = EXPERTS.find(profile=>profile.id === accountNumber);
+  return expert ? { username:usernameKey, password:usernameKey, role:roleKey, label:expert.name } : null;
+}
+function loginSampleUser(username, role, password){
+  const user = getSampleAccount(username, role);
   if(!user) return false;
-  if(String(username || "").trim().toLowerCase() !== user.username) return false;
   if(String(password || "") !== user.password) return false;
   const session = { username: user.username, role: user.role, label: user.label };
   setSession(session);
@@ -99,6 +113,25 @@ function readLS(key, fallback){
 function writeLS(key, value){
   try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){ /* storage unavailable */ }
 }
+function removeStoredFields(key, fields){
+  const records = readLS(key, null);
+  if(!Array.isArray(records)) return;
+  let changed = false;
+  const minimized = records.map(record=>{
+    if(!record || typeof record !== "object" || Array.isArray(record)) return record;
+    const copy = { ...record };
+    fields.forEach(field=>{
+      if(Object.prototype.hasOwnProperty.call(copy, field)){
+        delete copy[field];
+        changed = true;
+      }
+    });
+    return copy;
+  });
+  if(changed) writeLS(key, minimized);
+}
+removeStoredFields(LS.orders, ["shipping"]);
+removeStoredFields(LS.bookings, ["customerEmail", "customerName"]);
 function userStorageKey(key){
   const username = getSession()?.username || "guest";
   return `${key}_${username}`;
@@ -112,46 +145,46 @@ function gnTrack(eventName, parameters={}, metaEvent=null, metaParameters={}){
   if(typeof window.fbq === "function" && metaEvent){
     window.fbq("track", metaEvent, metaParameters);
   }
-  gnLogMarketingDemoEvent(eventName);
+  gnLogMarketingEvent(eventName);
 }
 
-function gnLogMarketingDemoEvent(eventName){
+function gnLogMarketingEvent(eventName){
   const allowedEvents = new Set([
     "page_view", "view_item_list", "click", "recommendation_click", "add_to_cart",
     "begin_checkout", "add_shipping_info", "add_payment_info", "purchase", "generate_lead",
   ]);
   if(!allowedEvents.has(eventName)) return;
-  const events = readLS("greennest_marketing_demo_events", []);
+  const events = readLS("greennest_marketing_events", []);
   events.unshift({ name:eventName, time:new Date().toISOString() });
-  writeLS("greennest_marketing_demo_events", events.slice(0, 8));
-  gnRenderMarketingDemoPanel();
+  writeLS("greennest_marketing_events", events.slice(0, 8));
+  gnRenderMarketingPanel();
 }
 
-function gnRenderMarketingDemoPanel(){
-  const panel = document.getElementById("marketing-demo-panel");
+function gnRenderMarketingPanel(){
+  const panel = document.getElementById("marketing-integration-panel");
   if(!panel) return;
   const config = window.GN_TRACKING_CONFIG || {};
-  const ids = config.demoIds || {};
+  const ids = config.placeholderIds || {};
   const tools = [
-    { key:"ga4", name:"Google Analytics 4", configured:Boolean(config.ga4Id), demoId:ids.ga4 || "DEMO-GA4-NOT-CONFIGURED" },
-    { key:"metaPixel", name:"Meta Pixel", configured:Boolean(config.metaPixelId), demoId:ids.metaPixel || "DEMO-PIXEL-NOT-CONFIGURED" },
-    { key:"adsense", name:"Google AdSense", configured:Boolean(config.adsenseClient && config.adsenseSlot), demoId:`${ids.adsenseClient || "DEMO-ADSENSE-NOT-CONFIGURED"} / ${ids.adsenseSlot || "DEMO-AD-SLOT"}` },
+    { key:"ga4", name:"Google Analytics 4", configured:Boolean(config.ga4Id), placeholderId:ids.ga4 || "NOT-CONFIGURED" },
+    { key:"metaPixel", name:"Meta Pixel", configured:Boolean(config.metaPixelId), placeholderId:ids.metaPixel || "NOT-CONFIGURED" },
+    { key:"adsense", name:"Google AdSense", configured:Boolean(config.adsenseClient && config.adsenseSlot), placeholderId:`${ids.adsenseClient || "NOT-CONFIGURED"} / ${ids.adsenseSlot || "NOT-CONFIGURED"}` },
   ];
-  const list = document.getElementById("marketing-demo-tools");
+  const list = document.getElementById("marketing-integration-tools");
   if(list){
     list.innerHTML = tools.map(tool=>`
       <div class="marketing-tool">
-        <span><strong>${tool.name}</strong><code>${tool.demoId}</code></span>
-        <span class="marketing-status">${tool.configured ? "Configured" : "Demo only"}</span>
+        <span><strong>${tool.name}</strong><code>${tool.placeholderId}</code></span>
+        <span class="marketing-status">${tool.configured ? "Configured" : "Not configured"}</span>
       </div>
     `).join("");
   }
-  const events = readLS("greennest_marketing_demo_events", []);
-  const eventList = document.getElementById("marketing-demo-events");
+  const events = readLS("greennest_marketing_events", []);
+  const eventList = document.getElementById("marketing-activity");
   if(eventList){
     eventList.innerHTML = events.length
       ? events.map(event=>`<li><code>${event.name}</code><time>${new Date(event.time).toLocaleTimeString()}</time></li>`).join("")
-      : "<li>Browse, click, or add a product to see demo events.</li>";
+      : "<li>Recent browsing activity will appear here.</li>";
   }
 }
 
@@ -183,8 +216,8 @@ function gnStartAnalytics(){
       window.dataLayer = window.dataLayer || [];
       window.gtag = window.gtag || function(){ window.dataLayer.push(arguments); };
       window.gtag("js", new Date());
-      const isLocalDemo = ["localhost", "127.0.0.1"].includes(window.location.hostname);
-      window.gtag("config", ga4Id, { debug_mode:isLocalDemo });
+      const isLocalDebug = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+      window.gtag("config", ga4Id, { debug_mode:isLocalDebug });
       const script = document.createElement("script");
       script.async = true;
       script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(ga4Id)}`;
@@ -257,7 +290,7 @@ function gnTrackProductCard(card){
 }
 
 gnStartAnalytics();
-gnLogMarketingDemoEvent("page_view");
+gnLogMarketingEvent("page_view");
 
 document.addEventListener("click", event=>{
   const target = event.target instanceof Element ? event.target.closest("a, button") : null;
@@ -274,12 +307,16 @@ document.addEventListener("click", event=>{
 /* ---------------- WALLETS ---------------- */
 const WALLET_STARTING_BALANCES = { customer: 5000, expert: 3000, admin: 0 };
 const MERCHANT_USERNAME = "admin";
-
 function getWallets(){
   const wallets = readLS(LS.wallets, {});
   Object.entries(WALLET_STARTING_BALANCES).forEach(([username, balance])=>{
     if(!wallets[username]) wallets[username] = { balance, transactions: [] };
   });
+  const session = getSession();
+  if(session && !wallets[session.username]){
+    const balance = session.role === "customer" ? 5000 : session.role === "expert" ? 3000 : 0;
+    wallets[session.username] = { balance, transactions: [] };
+  }
   writeLS(LS.wallets, wallets);
   return wallets;
 }
@@ -301,7 +338,7 @@ function isValidEsewaCredentials(esewaId, mpin){
 function topUpWallet(amount, esewaId, mpin){
   const value = Number(amount);
   const walletId = String(esewaId || "").replace(/\D/g, "");
-  if(!getSession() || !Number.isFinite(value) || value < 100 || value > 50000) return { ok:false, message:"Enter an amount between NPR 100 and NPR 50,000." };
+  if(!getSession() || !Number.isSafeInteger(value) || value < 100 || value > 50000 || value % 100 !== 0) return { ok:false, message:"Enter a whole amount between NPR 100 and NPR 50,000 in increments of NPR 100." };
   if(!isValidEsewaCredentials(walletId, mpin)) return { ok:false, message:"Top-up declined. Enter any 10-digit eSewa number and use its first 4 digits as the MPIN." };
   const wallets = getWallets();
   const wallet = wallets[getSession().username] || { balance:0, transactions:[] };
@@ -313,6 +350,7 @@ function topUpWallet(amount, esewaId, mpin){
 }
 function chargeWallet(senderUsername, receiverUsername, amount, reference){
   const value = Number(amount);
+  if(!Number.isSafeInteger(value) || value <= 0) return { ok:false, message:"The wallet payment amount is invalid." };
   const wallets = getWallets();
   const sender = wallets[senderUsername] || { balance:0, transactions:[] };
   const receiver = wallets[receiverUsername] || { balance:0, transactions:[] };
@@ -334,18 +372,21 @@ function getUserOrders(username=getSession()?.username){
 function getCart(){ return readLS(userStorageKey(LS.cart), []); }
 function setCart(cart){ writeLS(userStorageKey(LS.cart), cart); updateBadges(); }
 function addToCart(productId, qty=1){
+  const product = PRODUCTS.find(item=>item.id===productId);
+  if(!product){ toast("This product is not available."); return false; }
+  if(!Number.isSafeInteger(qty) || qty < 1 || qty > 100){ toast("Choose a quantity between 1 and 100."); return false; }
   const cart = getCart();
   const existing = cart.find(i=>i.id===productId);
-  if(existing){ existing.qty += qty; } else { cart.push({ id:productId, qty }); }
+  const nextQuantity = (existing ? Number(existing.qty) : 0) + qty;
+  if(!Number.isSafeInteger(nextQuantity) || nextQuantity > 100){ toast("A maximum of 100 of each product can be ordered."); return false; }
+  if(existing){ existing.qty = nextQuantity; } else { cart.push({ id:productId, qty }); }
   setCart(cart);
-  const p = PRODUCTS.find(x=>x.id===productId);
-  if(p){
-    const item = { item_id:String(p.id), item_name:p.name, item_category:p.category, price:p.price, quantity:qty };
-    gnTrack("add_to_cart", { currency:"NPR", value:p.price*qty, items:[item] }, "AddToCart", {
-      content_ids:[String(p.id)], content_type:"product", value:p.price*qty, currency:"NPR",
-    });
-  }
-  toast(`${p ? p.name : "Item"} added to cart`);
+  const item = { item_id:String(product.id), item_name:product.name, item_category:product.category, price:product.price, quantity:qty };
+  gnTrack("add_to_cart", { currency:"NPR", value:product.price*qty, items:[item] }, "AddToCart", {
+    content_ids:[String(product.id)], content_type:"product", value:product.price*qty, currency:"NPR",
+  });
+  toast(`${product.name} added to cart`);
+  return true;
 }
 function removeFromCart(productId){
   setCart(getCart().filter(i=>i.id!==productId));
@@ -353,9 +394,12 @@ function removeFromCart(productId){
 function changeQty(productId, delta){
   const cart = getCart();
   const item = cart.find(i=>i.id===productId);
-  if(!item) return;
-  item.qty += delta;
-  if(item.qty <= 0){ return removeFromCart(productId); }
+  if(!item || !Number.isSafeInteger(delta) || delta === 0) return;
+  const nextQuantity = Number(item.qty) + delta;
+  if(!Number.isSafeInteger(nextQuantity)){ toast("This cart quantity is invalid."); return; }
+  if(nextQuantity > 100){ toast("A maximum of 100 of each product can be ordered."); return; }
+  if(nextQuantity <= 0){ return removeFromCart(productId); }
+  item.qty = nextQuantity;
   setCart(cart);
 }
 function cartCount(){ return getCart().reduce((s,i)=>s+i.qty,0); }
@@ -379,27 +423,57 @@ function toggleWishlist(productId){
 function isWishlisted(productId){ return getWishlist().includes(productId); }
 
 /* ---------------- ORDERS (checkout) ---------------- */
-function placeOrder(shippingDetails=null){
+function placeOrder(shippingDetails=null, paymentDetails=null){
   const cart = getCart();
   if(cart.length===0) return null;
+  if(!shippingDetails || !paymentDetails || !["card", "cash", "wallet"].includes(paymentDetails.method)){
+    return { error:"Add delivery details and choose a valid payment method." };
+  }
+  const expectedPaymentStatus = {
+    card:"simulated; no charge collected",
+    cash:"payment due on delivery",
+    wallet:"paid from GreenNest wallet",
+  }[paymentDetails.method];
+  if(paymentDetails.status !== expectedPaymentStatus){
+    return { error:"Payment status does not match the selected method." };
+  }
+
+  const orderItems = cart.map((item)=>{
+    const product = PRODUCTS.find((entry)=>entry.id===item.id);
+    const quantity = Number(item.qty);
+    if(!product || !Number.isSafeInteger(quantity) || quantity < 1){
+      return null;
+    }
+    return { id:product.id, name:product.name, qty:quantity, price:product.price };
+  });
+  if(orderItems.some((item)=>item === null)){
+    return { error:"Your cart contains an invalid item. Remove it and try again." };
+  }
+
   const session = getSession();
-  const total = cartTotal();
-  const orderId = "GN" + Date.now().toString().slice(-8);
-  const payment = session ? chargeWallet(session.username, MERCHANT_USERNAME, total, orderId) : { ok:false, message:"Please log in before paying." };
-  if(!payment.ok) return { error:payment.message };
+  if(!session) return { error:"Please log in before placing your order." };
+  const total = orderItems.reduce((sum, item)=>sum + item.price * item.qty, 0);
+  const orderId = "GN" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+  if(paymentDetails.method === "wallet"){
+    const payment = chargeWallet(session.username, MERCHANT_USERNAME, total, orderId);
+    if(!payment.ok) return { error:payment.message };
+  }
   const orders = readLS(LS.orders, []);
   const order = {
     id: orderId,
-    items: cart,
+    items:orderItems,
     total,
+    paymentMethod:paymentDetails.method,
+    paymentStatus:paymentDetails.status,
     date: new Date().toISOString(),
+    status:paymentDetails.method === "cash" ? "Awaiting cash on delivery" : paymentDetails.method === "wallet" ? "Paid from GreenNest wallet" : "Card authorization simulated; no charge collected",
+    shipping:shippingDetails,
+    customerUsername:session.username,
+    customerName:session.label,
   };
-  if(shippingDetails) order.shipping = shippingDetails;
-  if(session){
-    order.customerUsername = session.username;
-    order.customerName = session.label;
-  }
-  orders.unshift(order);
+  const storedOrder = { ...order };
+  delete storedOrder.shipping;
+  orders.unshift(storedOrder);
   writeLS(LS.orders, orders);
   setCart([]);
   const items = gnProductItems(cart);
@@ -491,7 +565,10 @@ function addBooking(booking){
   const bookings = getBookings();
   booking.id = "BK" + Date.now().toString().slice(-8);
   booking.status = "Pending confirmation";
-  bookings.unshift(booking);
+  const storedBooking = { ...booking };
+  delete storedBooking.customerEmail;
+  delete storedBooking.customerName;
+  bookings.unshift(storedBooking);
   writeLS(LS.bookings, bookings);
   gnTrack("generate_lead", { currency:"NPR", value:0, method:"gardening_consultation" }, "Lead", { content_name:"Gardening consultation" });
   return booking;
@@ -505,8 +582,19 @@ function updateBookingStatus(bookingId, status){
   if(b) b.status = status;
   writeLS(LS.bookings, bookings);
 }
+async function getEmailApiBase(){
+  if(!["5500", "5501"].includes(window.location.port)) return "";
+  try{
+    const response = await fetch("/api/health", { cache:"no-store" });
+    if(response.ok) return "";
+    if(response.status !== 404) throw new Error("Unable to check the local email service.");
+  }catch(error){
+    if(!(error instanceof TypeError)) throw error;
+  }
+  return `${window.location.protocol}//localhost:3000`;
+}
 async function emailBookingRequest(booking){
-  const apiBase = ["5500", "5501"].includes(window.location.port) ? "http://localhost:3000" : "";
+  const apiBase = await getEmailApiBase();
   const response = await fetch(`${apiBase}/api/bookings/email`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -530,7 +618,7 @@ async function emailOrderConfirmation(order){
       };
     }) : order.items,
   };
-  const apiBase = ["5500", "5501"].includes(window.location.port) ? "http://localhost:3000" : "";
+  const apiBase = await getEmailApiBase();
   const response = await fetch(`${apiBase}/api/orders/email`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -656,5 +744,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
   ensureAuthUI();
   checkPageAccess();
   updateBadges();
-  gnRenderMarketingDemoPanel();
+  gnRenderMarketingPanel();
 });

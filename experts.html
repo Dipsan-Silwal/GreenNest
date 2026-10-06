@@ -3,9 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Experts — GreenNest</title>
-<meta name="description" content="Find and book GreenNest gardening experts for plant consultations, rooftop gardens, landscaping and home visits in Nepal.">
+<title>Gardening Experts in Nepal | Book Plant Care | GreenNest</title>
+<meta name="description" content="Book gardening experts in Nepal for rooftop gardens, landscaping, plant consultations, disease checks and home visits. Compare services and find trusted help with GreenNest.">
 <meta name="keywords" content="gardening experts Nepal, plant consultation Kathmandu, rooftop garden installation, landscaping services">
+<meta property="og:title" content="Gardening Experts in Nepal | GreenNest">
+<meta property="og:description" content="Book expert help for rooftop gardens, landscaping, plant consultations, disease checks and home visits.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="/experts.html">
+<meta property="og:image" content="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&amp;fit=crop&amp;w=1200&amp;h=630&amp;q=80">
+<meta property="og:image:alt" content="A gardener caring for healthy green plants">
+<meta property="og:locale" content="en_NP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gardening Experts in Nepal | GreenNest">
+<meta name="twitter:description" content="Book expert help for rooftop gardens, landscaping and plant consultations.">
+<meta name="twitter:image" content="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&amp;fit=crop&amp;w=1200&amp;h=630&amp;q=80">
+<meta name="twitter:image:alt" content="A gardener caring for healthy green plants">
+<link rel="canonical" href="/experts.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700&family=Work+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -52,13 +65,16 @@
 <section class="page-hero">
   <div class="wrap">
     <div class="eyebrow on-dark">Expert Gardening Service</div>
-    <h1>Book a verified professional</h1>
+    <h1>Book Gardening Experts in Nepal</h1>
     <p>Rooftop installs, landscaping, consultations, disease inspection, monthly maintenance and home visits.</p>
   </div>
 </section>
 
 <section>
   <div class="wrap">
+    <div class="section-head">
+      <h2>Find the right garden expert for your project</h2>
+    </div>
     <div class="expert-grid" id="expert-grid"></div>
 
     <div class="my-bookings">
@@ -92,7 +108,7 @@
           <option>Morning (9AM–12PM)</option><option>Afternoon (1PM–4PM)</option><option>Evening (5PM–7PM)</option>
         </select>
       </div>
-      <div class="field"><label>What do you need help with?</label><textarea id="book-note" placeholder="e.g. Rooftop container garden setup, ~15 pots"></textarea></div>
+      <div class="field"><label>What do you need help with?</label><textarea id="book-note" placeholder="e.g. Rooftop container garden setup, ~15 pots"></textarea><small>Describe the gardening work only; do not include contact or payment details.</small></div>
       <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:20px;">Confirm booking request</button>
     </form>
   </div>
@@ -122,7 +138,7 @@
         <div class="e-top">
           <div class="e-avatar">${e.avatar}</div>
           <div>
-            <div class="e-name">${e.name}</div>
+            <h3 class="e-name">${e.name}</h3>
             <div class="e-spec">${e.specialty}</div>
           </div>
         </div>
@@ -154,7 +170,8 @@
     const note = document.getElementById("book-note").value;
     if(!customerEmail){ toast("Please enter your email address"); return; }
     if(!date){ toast("Please choose a date"); return; }
-    const booking = addBooking({ expertId, expertName: e.name, specialty: e.specialty, price: e.price, customerEmail, customerName: getSession()?.label || "Guest", date: `${date} · ${time}`, note });
+    const session = getSession();
+    const booking = addBooking({ expertId, expertName: e.name, specialty: e.specialty, price: e.price, customerUsername:session?.username, customerEmail, customerName:session?.label || "Guest", date: `${date} · ${time}`, note });
     const submitButton = ev.submitter;
     submitButton.disabled = true;
     try{
@@ -171,7 +188,8 @@
   });
 
   function renderMyBookings(){
-    const bookings = getBookings();
+    const username = getSession()?.username;
+    const bookings = getBookings().filter(booking=>booking.customerUsername === username);
     const box = document.getElementById("my-bookings-box");
     if(bookings.length===0){
       box.innerHTML = `<div class="empty-state">📅<br>No bookings yet. Choose an expert above to get started.</div>`;

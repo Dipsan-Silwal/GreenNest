@@ -40,11 +40,11 @@ const EXPERTS = [
 
 const DEFAULT_CUSTOMER_AVATAR = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80";
 const CUSTOMER_PROFILES = [
-  { id:1, username:"customer", name:"Aanya Sharma", email:"aanya@greennest.com", photo:"https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80" },
-  { id:2, username:"meera", name:"Meera Koirala", email:"meera@greennest.com", photo:"https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80" },
-  { id:3, username:"sujan", name:"Sujan Bhandari", email:"sujan@greennest.com", photo:"" },
-  { id:4, username:"priya", name:"Priya Pandey", email:"priya@greennest.com", photo:"https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80" },
-  { id:5, username:"abin", name:"Abin Khadka", email:"abin@greennest.com", photo:"" }
+  { id:1, username:"customer1", name:"Aanya Sharma", email:"aanya@greennest.com", photo:"https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80" },
+  { id:2, username:"customer2", name:"Meera Koirala", email:"meera@greennest.com", photo:"https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80" },
+  { id:3, username:"customer3", name:"Sujan Bhandari", email:"sujan@greennest.com", photo:"" },
+  { id:4, username:"customer4", name:"Priya Pandey", email:"priya@greennest.com", photo:"https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80" },
+  { id:5, username:"customer5", name:"Abin Khadka", email:"abin@greennest.com", photo:"" }
 ];
 
 function getCustomerProfiles(){
