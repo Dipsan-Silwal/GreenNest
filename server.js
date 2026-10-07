@@ -48,6 +48,7 @@ const publicPages = new Map([
   ["/quiz.html", "quiz.html"],
   ["/companion.html", "companion.html"],
   ["/experts.html", "experts.html"],
+  ["/checkout.html", "checkout.html"],
 ]);
 const pageSeo = {
   "index.html": {
@@ -69,6 +70,10 @@ const pageSeo = {
   "experts.html": {
     title:"Book Gardening Experts in Nepal | GreenNest",
     description:"Find gardening professionals for plant installations, garden checkups, and practical growing advice.",
+  },
+  "checkout.html": {
+    title:"Secure Checkout | GreenNest",
+    description:"Complete your GreenNest order securely. Review plants and garden supplies, enter delivery details, choose payment, and get your order confirmation by email.",
   },
 };
 const sitemapPaths = ["/", "/shop.html", "/quiz.html", "/companion.html", "/experts.html"];
@@ -158,6 +163,23 @@ app.get([...publicPages.keys()], (req, res, next) => {
       page = page.replace(
         /<script id="greennest-website-schema" type="application\/ld\+json">[\s\S]*?<\/script>/i,
         `<script id="greennest-website-schema" type="application/ld+json">${JSON.stringify(websiteSchema)}</script>`,
+      );
+    }else if(fileName === "checkout.html"){
+      const checkoutSchema = {
+        "@context":"https://schema.org",
+        "@type":"WebPage",
+        name:metadata.title,
+        description:metadata.description,
+        url:canonicalUrl,
+        isPartOf:{
+          "@type":"WebSite",
+          name:"GreenNest",
+          url:siteUrl,
+        },
+      };
+      page = page.replace(
+        /<script id="greennest-checkout-schema" type="application\/ld\+json">[\s\S]*?<\/script>/i,
+        `<script id="greennest-checkout-schema" type="application/ld+json">${JSON.stringify(checkoutSchema)}</script>`,
       );
     }
     res.type("html");

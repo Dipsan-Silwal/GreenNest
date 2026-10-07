@@ -64,9 +64,25 @@ npm.cmd start
 
 These environment variables apply only to that PowerShell window. To keep this setup between sessions, put the same values in your ignored `.env` file instead. Do not run Live Server and the Express app on the same port.
 
-### Use HTTPS with VS Code Live Server
+### Use VS Code Live Server with email
 
-Live Server is separate from the Express server above. If you need the static preview too, use port `5501` so it does not conflict with GreenNest on `5500`. After creating the trusted certificate, add this workspace setting to `.vscode/settings.json`, replacing the certificate paths with their full paths on your computer:
+Live Server is separate from the Express server above. The workspace settings use port `5501` and proxy the site to Express on port `3000`, so keep `npm.cmd start` running while previewing the pages. Set `SITE_URL=http://127.0.0.1:5501` in `.env`, restart both servers after changing it, and audit the matching `http://127.0.0.1:5501/` URL.
+
+```json
+{
+  "liveServer.settings.port": 5501,
+  "liveServer.settings.https": {
+    "enable": false
+  },
+  "liveServer.settings.proxy": {
+    "enable": true,
+    "baseUri": "/",
+    "proxyUri": "http://127.0.0.1:3000"
+  }
+}
+```
+
+To use HTTPS instead, enable Live Server TLS with the trusted certificate paths:
 
 ```json
 {
@@ -76,21 +92,16 @@ Live Server is separate from the Express server above. If you need the static pr
     "cert": "C:\\path\\to\\GreenNest\\.certs\\localhost.pem",
     "key": "C:\\path\\to\\GreenNest\\.certs\\localhost-key.pem",
     "passphrase": ""
+  },
+  "liveServer.settings.proxy": {
+    "enable": true,
+    "baseUri": "/",
+    "proxyUri": "http://127.0.0.1:3000"
   }
 }
 ```
 
-The workspace settings file is intentionally ignored by Git because certificate paths are machine-specific. Add a Live Server proxy in the same settings file so `/api` forwards to `http://127.0.0.1:3000/api`:
-
-```json
-"liveServer.settings.proxy": {
-  "enable": true,
-  "baseUri": "/api",
-  "proxyUri": "http://127.0.0.1:3000/api"
-}
-```
-
-Set `PORT=3000` in `.env`, run `npm.cmd start`, then restart Live Server from the VS Code Command Palette and open `https://127.0.0.1:5501/`. The browser talks to the API through the HTTPS Live Server origin; the proxy forwards those requests to the local HTTP Node backend, so TLS on Node is not required. The mkcert certificate is trusted only on the machine where `mkcert -install` was run.
+When using HTTPS, also set `SITE_URL=https://127.0.0.1:5501` in `.env` and audit `https://127.0.0.1:5501/`. The workspace settings file is intentionally ignored by Git because certificate paths are machine-specific. Restart Live Server from the VS Code Command Palette and reopen the matching URL after changing its protocol settings. The mkcert certificate is trusted only on the machine where `mkcert -install` was run.
 
 For production, use your hosting platform or reverse proxy to obtain, renew, and terminate a publicly trusted TLS certificate. Set `NODE_ENV=production` and `SITE_URL=https://your-real-domain.example` (replace this with your real origin, without a path) in the deployment environment. Production startup intentionally fails if `SITE_URL` is absent or not HTTPS. Do not upload the local `.certs` files or use a self-signed development certificate for a public website. If TLS terminates at a reverse proxy, configure the real public `SITE_URL` there; the app uses it for canonical URLs, Open Graph URLs, `robots.txt`, and the XML sitemap.
 

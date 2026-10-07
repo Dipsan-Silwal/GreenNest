@@ -26,14 +26,14 @@
 <style>
   .hero{ 
     background:
-      linear-gradient(135deg, rgba(14,33,28,0.82), rgba(22,48,42,0.7)),
-      url('https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+      linear-gradient(135deg, rgba(14,33,28,0.82), rgba(22,48,42,0.7));
     color:var(--paper); position:relative; overflow:hidden; padding:96px 0 90px; box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
   }
+  .hero-background-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
   .hero::before{
     content:''; position:absolute; inset:0;
     background:radial-gradient(circle at 80% 20%, rgba(217,164,72,.17), transparent 20%),
-              radial-gradient(circle at 20% 100%, rgba(169,193,160,.16), transparent 22%);
+              radial-gradient(circle at 20% 100%, rgba(169,193,160,.16), transparent 22%);z-index:1;
   }
   .hero .wrap{ display:grid; grid-template-columns:1.15fr .85fr; gap:40px; align-items:center; position:relative; z-index:2; }
   .hero h1{ font-size:clamp(40px,5.2vw,70px); line-height:.98; color:#fff; }
@@ -67,14 +67,17 @@
   .stat .num{ font-family:'Fraunces',serif; font-size:28px; font-weight:700; color:var(--forest); }
   .stat .lbl{ font-size:12px; color:rgba(22,48,42,.6); margin-top:6px; }
 
-  .band-dark{ background:linear-gradient(180deg, rgba(22,48,42,.98), rgba(10,21,19,.98)), url('https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat; color:var(--paper); }
+  .band-dark{ position:relative; overflow:hidden; background:linear-gradient(180deg, rgba(22,48,42,.82), rgba(10,21,19,.88)); color:var(--paper); }
+  .band-dark .wrap{position:relative;z-index:1}
   .problem-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:16px; }
   .prob-card{ background:rgba(255,255,255,.96); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:24px; }
   .prob-card .ic{ font-size:20px; margin-bottom:12px; }
   .prob-card h4{ font-size:16px; margin-bottom:8px; }
   .prob-card p{ font-size:13.5px; color:rgba(22,48,42,.62); }
 
-  .closing{ background:linear-gradient(135deg, rgba(24,52,44,.8), rgba(10,21,19,.95)), url('https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat; color:#fff; text-align:center; padding:100px 0; }
+  .closing{ position:relative; overflow:hidden; background:linear-gradient(135deg, rgba(24,52,44,.8), rgba(10,21,19,.95)); color:#fff; text-align:center; padding:100px 0; }
+  .closing .wrap{position:relative;z-index:1}
+  .section-background-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .closing .leafmark{ width:56px; height:56px; border-radius:50%; background:var(--moss); display:flex; align-items:center; justify-content:center; margin:0 auto 24px; }
   .closing h2{ color:#fff; font-size:clamp(28px,3.8vw,42px); }
   .closing p{ max-width:540px; margin:20px auto 0; color:var(--sage); font-size:15.5px; }
@@ -90,7 +93,7 @@
 <header>
   <nav class="wrap">
     <a href="index.html" class="brand">
-      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#4E7A56"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#F5F1E6"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#4E7A56"/><path d="M12 18c0-5 3-8 6-9-1 5-3 8-6 9Z" fill="#F5F1E6"/></svg>
       GreenNest
     </a>
     <div class="navlinks" id="navlinks">
@@ -110,6 +113,7 @@
 </header>
 
 <section class="hero">
+  <img class="hero-background-image" src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&amp;fit=crop&amp;w=1400&amp;q=80" alt="Healthy garden plants growing in rich soil">
   <div class="hero-ring"></div>
   <div class="hero-ring r2"></div>
   <div class="wrap">
@@ -123,7 +127,8 @@
       </div>
     </div>
     <div class="plant-stage">
-      <svg viewBox="0 0 220 300" fill="none">
+      <svg viewBox="0 0 220 300" fill="none" role="img" aria-labelledby="hero-plant-title">
+        <title id="hero-plant-title">Illustration of a leafy plant growing in a pot</title>
         <ellipse class="pot" cx="110" cy="278" rx="46" ry="10"/>
         <path class="pot" d="M74 250 L146 250 L136 285 L84 285 Z"/>
         <path class="grow-stem" d="M110 250 C108 200 112 160 110 110 C109 90 112 70 110 55"/>
@@ -188,6 +193,7 @@
 </section>
 
 <section class="band-dark">
+  <img class="section-background-image" src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Vegetable beds and healthy plants growing in a garden">
   <div class="wrap">
     <div class="section-head">
       <div class="eyebrow on-dark">The Challenge</div>
@@ -204,7 +210,64 @@
   </div>
 </section>
 
+<section aria-labelledby="nepal-care-title">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">A greener home, one plant at a time</div>
+      <h2 id="nepal-care-title">Practical plant care for homes and gardens in Nepal</h2>
+    </div>
+    <div class="quick-links">
+      <article class="ql-card">
+        <div>
+          <h3>Choose plants for your light and space</h3>
+          <p>Before bringing a plant home, notice how many hours of sunlight reach your room, balcony, or rooftop. Match that light to the plant rather than choosing by appearance alone. A plant suited to its spot is easier to care for and more likely to grow well.</p>
+        </div>
+      </article>
+      <article class="ql-card">
+        <div>
+          <h3>Water according to the soil and season</h3>
+          <p>Check the soil before watering: many houseplants need the top layer to dry first, while seedlings and leafy vegetables may need more consistent moisture. Rain, heat, pot size, and drainage all affect how quickly soil dries. Empty standing water from saucers to help protect roots.</p>
+        </div>
+      </article>
+      <article class="ql-card">
+        <div>
+          <h3>Plan for changing local weather</h3>
+          <p>Gardening conditions can change between Nepal's seasons and from one growing space to another. Protect tender plants from strong midday sun or cold nights when needed, and adjust watering after rain. Use the GreenNest plant quiz, seasonal planner, care journal, and expert directory to plan your next step.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="gardening-faq-title">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Gardening questions</div>
+      <h2 id="gardening-faq-title">Helpful answers for getting started</h2>
+    </div>
+    <div class="problem-grid">
+      <article class="prob-card">
+        <h3>How do I choose a plant for my room?</h3>
+        <p>Start with the light available near the spot where the plant will live. Check whether it gets direct sun, bright indirect light, or shade, then consider the room's size and how often you can water. The GreenNest plant quiz helps narrow down choices using your space and growing experience.</p>
+      </article>
+      <article class="prob-card">
+        <h3>How often should I water indoor plants?</h3>
+        <p>There is no single schedule that works for every plant. Feel the soil first and account for the pot's drainage, room temperature, and recent rain or dry weather. Water thoroughly when the plant needs it, and make sure excess water can drain away rather than leaving roots in a full saucer.</p>
+      </article>
+      <article class="prob-card">
+        <h3>What can I grow on a balcony or rooftop?</h3>
+        <p>Many herbs, leafy vegetables, and compact flowering plants can grow in containers if they have enough light, suitable soil, and drainage. Choose varieties that fit your available sun and space. The seasonal planner offers ideas, while the shop provides pots, seeds, tools, and other gardening supplies.</p>
+      </article>
+      <article class="prob-card">
+        <h3>When should I ask a gardening expert?</h3>
+        <p>Consider asking for help when a plant keeps declining, you are planning a new garden, or you need advice about layout, soil, or plant health. GreenNest lets you browse gardening professionals and request a consultation for practical guidance tailored to your growing space.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
 <section class="closing">
+  <img class="section-background-image" src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&amp;fit=crop&amp;w=1600&amp;q=80" alt="Lush green garden plants ready to inspire a home garden">
   <div class="wrap">
     <div class="leafmark"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 21s8-6 8-13a8 8 0 0 0-16 0c0 7 8 13 8 13Z" fill="#F5F1E6"/></svg></div>
     <h2>Ready to start your garden in Nepal?</h2>
