@@ -9,7 +9,6 @@ Plain HTML/CSS/JavaScript with a small Node.js email backend.
 2. In PowerShell, open this project folder and run:
 
    ```powershell
-   Copy-Item .env.example .env
    npm.cmd install
    npm.cmd start
    ```
@@ -81,9 +80,17 @@ Live Server is separate from the Express server above. If you need the static pr
 }
 ```
 
-The workspace settings file is intentionally ignored by Git because certificate paths are machine-specific. Restart Live Server from the VS Code Command Palette, then open `https://127.0.0.1:5501/`. The mkcert certificate is trusted only on the machine where `mkcert -install` was run.
+The workspace settings file is intentionally ignored by Git because certificate paths are machine-specific. Add a Live Server proxy in the same settings file so `/api` forwards to `http://127.0.0.1:3000/api`:
 
-To keep booking and order emails working from the HTTPS Live Server page, also enable TLS for the Express server on port `3000` with `TLS_CERT_PATH` and `TLS_KEY_PATH` in `.env`, then run `npm.cmd start`. The page will use that HTTPS API.
+```json
+"liveServer.settings.proxy": {
+  "enable": true,
+  "baseUri": "/api",
+  "proxyUri": "http://127.0.0.1:3000/api"
+}
+```
+
+Set `PORT=3000` in `.env`, run `npm.cmd start`, then restart Live Server from the VS Code Command Palette and open `https://127.0.0.1:5501/`. The browser talks to the API through the HTTPS Live Server origin; the proxy forwards those requests to the local HTTP Node backend, so TLS on Node is not required. The mkcert certificate is trusted only on the machine where `mkcert -install` was run.
 
 For production, use your hosting platform or reverse proxy to obtain, renew, and terminate a publicly trusted TLS certificate. Set `NODE_ENV=production` and `SITE_URL=https://your-real-domain.example` (replace this with your real origin, without a path) in the deployment environment. Production startup intentionally fails if `SITE_URL` is absent or not HTTPS. Do not upload the local `.certs` files or use a self-signed development certificate for a public website. If TLS terminates at a reverse proxy, configure the real public `SITE_URL` there; the app uses it for canonical URLs, Open Graph URLs, `robots.txt`, and the XML sitemap.
 
